@@ -1,6 +1,6 @@
 /**
  * @file main.c
- * @author Guilherme da Motta Tranche (13671549) && Téo Sobrino Alves (12557192)
+ * @author Miller Matheus Lima Anacleto Rocha (13727954) && Téo Sobrino Alves (12557192)
  * 
  * @brief Trabalho introdutório da disciplina de organização
  * de arquivos 1S 2023
