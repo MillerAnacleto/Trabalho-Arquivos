@@ -50,7 +50,10 @@ void dataPrintCsvStyle(Data_t* data);
 
 void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter);
 
-int indexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size);
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size);
 
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
 
 #endif // !DATA_H_

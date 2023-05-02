@@ -59,4 +59,6 @@ char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char
 
 void printField(char* str, int64_t offset, int key, int parameter);
 
+void readFieldStdin(Index_Data_t* array_elem, int parameter);
+
 #endif // !INPUT_OUTPUT_H_

@@ -186,7 +186,7 @@ void dataPrintCsvStyle(Data_t* data) {
 
 void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter){
 
-    if(parameter == 0 || parameter == 2){
+    if(parameter <= 1){
         qsort(index_array, size, sizeof(Index_Node_t*), indexDataIntCmp);
         
         return;
@@ -195,25 +195,136 @@ void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter){
     qsort(index_array, size, sizeof(Index_Node_t*), indexDataStrCmp);
 }
 
-int indexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size){
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size){
 
     int acc = 0;
     Index_Data_t* data;
+
     for(int i = 0; i < size; i++){
 
-        data = indexArrayGetData(index_array[i]);
-        int64_t offset = indexDataGetOffset(data);
-        int int_key =  indexDataGetIntKey(data);
-        char* char_key = indexDataGetStrKey(data);
+        Index_Node_t* next = index_array[i];
 
-        if(int_key != EMPTY_INT_FIELD){
-            acc += fwrite(&int_key, sizeof(int), 1, index_file);
+        while(next != NULL){
+
+            data = indexNodeGetData(index_array[i]);
+            int64_t offset = indexDataGetOffset(data);
+            int int_key =  indexDataGetIntKey(data);
+            char* char_key = indexDataGetStrKey(data);
+
+            if(int_key != EMPTY_INT_FIELD){
+                acc += fwrite(&int_key, sizeof(int), 1, index_file);
+            }
+            else if(char_key != NULL){
+                acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
+            }
+            acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
+            next = indexNodeGetNext(next);
         }
-        else if(char_key != NULL){
-            acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
-        }
-        acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
     }
 
     return acc;
+}
+
+Index_Data_t* indexDataReadInt(FILE* index){
+    Index_Data_t* data = indexDataCreate();
+    int key = EMPTY_INT_FIELD;
+    int64_t offset = -1;
+    char* str = NULL;
+    //int checker;
+
+    fread(&key, sizeof(int), 1, index);
+    fread(&offset, sizeof(int64_t), 1, index);
+
+    indexDataSetIntKey(data, key);
+    indexDataSetOffset(data, offset);
+    indexDataSetStrKey(data, str);
+
+    return data;
+}
+
+Index_Data_t* indexDataReadStr(FILE* index){
+    Index_Data_t* data = indexDataCreate();
+    int key = EMPTY_INT_FIELD;
+    int64_t offset = -1;
+    char* str = malloc(12*sizeof(char));
+
+    fread(str, sizeof(char), 12, index);
+    fread(&offset, sizeof(int64_t), 1, index);
+
+    indexDataSetIntKey(data, key);
+    indexDataSetOffset(data, offset);
+    indexDataSetStrKey(data, str);
+
+    return data;
+}
+
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
+
+    int curr_pos = 0;
+    int last_val = 0;
+    int curr_val = 0;
+
+    Index_Node_t* curr_elem = NULL;
+    Index_Node_t* next_elem = NULL;
+    Index_Data_t* data = indexDataReadInt(index);
+    last_val = indexDataGetIntKey(data);
+
+    indexNodeSetData(array, curr_pos, data);
+    curr_pos++;
+    curr_elem = array[0];
+
+    for(int i = 1; i < size; i++){
+        Index_Data_t* data = indexDataReadInt(index);
+        curr_val = indexDataGetIntKey(data);
+        int64_t offset_check = indexDataGetOffset(data);
+        
+        if(curr_val == last_val){
+            Index_Node_t* next = indexNodeCreate(data);
+            next_elem = indexNodeStackData(curr_elem, next);
+            curr_elem = next_elem;
+        }
+        else{
+            indexNodeSetData(array, curr_pos, data);
+            curr_elem = array[curr_pos];
+            last_val = curr_val;
+            curr_pos++;
+        }
+    }
+    *diff_node_num = curr_pos;
+    *node_num = size;
+}
+
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
+
+    int curr_pos = 0;
+    char* last_val = 0;
+    char* curr_val = 0;
+
+    Index_Node_t* curr_elem = NULL;
+    Index_Node_t* next_elem = NULL;
+    Index_Data_t* data = indexDataReadStr(index);
+    last_val = indexDataGetStrKey(data);
+
+    indexNodeSetData(array, curr_pos, data);
+    curr_pos++;
+    curr_elem = array[0];
+
+    for(int i = 1; i < size; i++){
+        Index_Data_t* data = indexDataReadStr(index);
+        curr_val = indexDataGetStrKey(data);
+        
+        if(curr_val == last_val){
+            Index_Node_t* next = indexNodeCreate(data);
+            next_elem = indexNodeStackData(curr_elem, next);
+            curr_elem = next_elem;
+        }
+        else{
+            indexNodeSetData(array, curr_pos, data);
+            curr_elem = array[curr_pos];
+            last_val = curr_val;
+            curr_pos++;
+        }
+    }
+    *diff_node_num = curr_pos;
+    *node_num = size;
 }

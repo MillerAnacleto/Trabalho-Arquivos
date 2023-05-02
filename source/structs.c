@@ -13,6 +13,7 @@
 
 struct index_header_{
     char status;
+    int struct_num;
 };
 
 struct index_data_ {
@@ -27,6 +28,14 @@ char indexHeaderGetStatus(Index_Header_t* header){
 
 void indexHeaderSetStatus(Index_Header_t* header, char status){
     header->status = status;
+}
+
+int indexHeaderGetNum(Index_Header_t* header){
+    return header->struct_num;
+}
+
+void indexHeaderSetNum(Index_Header_t* header, int num){
+    header->struct_num = num;
 }
 
 int indexDataGetIntKey(Index_Data_t* data){
@@ -45,7 +54,6 @@ void indexDataSetOffset(Index_Data_t* data, int64_t offset){
     data->offset = offset;
 }
 
-
 char* indexDataGetStrKey(Index_Data_t* data){
     return data->str_key;
 }
@@ -57,6 +65,7 @@ void indexDataSetStrKey(Index_Data_t* data, char* key){
 Index_Header_t* indexHeaderCreate(){
     Index_Header_t* header_indx = malloc(sizeof(Index_Header_t));
     header_indx->status = 1;
+    header_indx->struct_num = 0;
     return header_indx;
 }
 
@@ -87,6 +96,14 @@ struct index_node_{
     Index_Node_t* next;
 };
 
+Index_Node_t* indexNodeCreate(Index_Data_t* data){
+    Index_Node_t* node = malloc(sizeof(Index_Node_t));
+    node->data = data;
+    node->next = NULL;
+
+    return node;
+}
+
 Index_Node_t** indexArrayCreate(int node_num){
 
     Index_Node_t** array = malloc(node_num*sizeof(Index_Node_t*));
@@ -100,33 +117,30 @@ Index_Node_t** indexArrayCreate(int node_num){
     return array;
 }
 
-Index_Data_t* indexArrayGetData(Index_Node_t* node){
+Index_Data_t* indexNodeGetData(Index_Node_t* node){
     return node->data;
 }
 
-void indexArraySetData(Index_Node_t** node, int pos, Index_Data_t* data){
+void indexNodeSetData(Index_Node_t** node, int pos, Index_Data_t* data){
     node[pos]->data = data;
 }
 
-Index_Node_t* indexArrayGetNext(Index_Node_t* node){
+Index_Node_t* indexNodeStackData(Index_Node_t* node, Index_Node_t* next){
+    node->next = next;
     return node->next;
 }
 
-void indexArraySetNext(Index_Node_t* node, Index_Node_t* next){
+Index_Node_t* indexNodeGetNext(Index_Node_t* node){
+    return node->next;
+}
+
+void indexNodeSetNext(Index_Node_t* node, Index_Node_t* next){
     node->next = next;
 }
 
 void indexArrayTrim(Index_Node_t** array, int node_num){
 
     array = realloc(array, node_num*sizeof(Index_Node_t*));
-}
-
-void freeNodeList(Index_Node_t* node){
-    if(node == NULL) return;
-    
-    Index_Node_t* next = indexArrayGetNext(node);
-    indexDataDestroy(node->data);
-    freeNodeList(next);
 }
 
 int indexDataStrCmp(const void *a, const void *b){
@@ -145,7 +159,7 @@ int indexDataStrCmp(const void *a, const void *b){
         if(j != 0) return j;
     }
 
-    return elem1->data->offset - elem2->data->offset;
+    return 0;
 }
 
 int indexDataIntCmp(const void *a, const void *b){
@@ -162,13 +176,22 @@ int indexDataIntCmp(const void *a, const void *b){
     int j = int1 - int2;
     if(j != 0) return j;
 
-    return elem1->data->offset - elem2->data->offset;
+    return 0;
+}
+
+void freeNodeList(Index_Node_t* node){
+    if(node == NULL) return;
+    
+    Index_Node_t* next = indexNodeGetNext(node);
+    indexDataDestroy(node->data);
+    free(node);
+    freeNodeList(next);
 }
 
 void indexArrayDestroy(Index_Node_t** array, int size, int non_empty){
 
     for(int i = 0;  i < non_empty; i++){
-        Index_Node_t* next = indexArrayGetNext(array[i]);
+        Index_Node_t* next = indexNodeGetNext(array[i]);
         freeNodeList(next);
         indexDataDestroy(array[i]->data);
         free(array[i]);
@@ -176,6 +199,7 @@ void indexArrayDestroy(Index_Node_t** array, int size, int non_empty){
     for(int i = non_empty; i < size; i++){
         free(array[i]);
     }
+
     free(array);
 }
 

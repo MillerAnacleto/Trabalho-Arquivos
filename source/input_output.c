@@ -83,7 +83,6 @@ int32_t readCsvInt(FILE* csv_file) {
 char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char* exists){
 
     Data_t* data = dataBinaryRead(file);
-    //printf("ID = %d\n", dataGetId(data));
     *offset += 32 + varStrSize(data);
     char* str = NULL;
 
@@ -93,15 +92,15 @@ char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char
         break;
         
     case 1:
-        str = copyConstVarStr(dataGetDate(data));
-        break;
-        
-    case 2:
         *key = dataGetArticle(data);
         break;
-        
+
+    case 2:
+        str = copyConstVarStr(dataGetDate(data));
+        break;    
+
     case 3:
-        str = copyConstVarStr(dataGetBrand(data));
+        str = copyConstVarStr(dataGetDescription(data));
         break;
 
     case 4:
@@ -109,7 +108,7 @@ char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char
         break;
 
     case 5:
-        str = copyConstVarStr(dataGetDescription(data));
+        str = copyConstVarStr(dataGetBrand(data));
         break;
 
     default:
@@ -124,12 +123,12 @@ char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char
 
 void printField(char* str, int64_t offset, int key, int parameter){
 
-    if(parameter != 2 && parameter != 0 && str == NULL){
+    if(parameter > 1 && str == NULL){
         printf("Não consta\n");
         return;
     }
 
-    if(parameter == 0 || parameter == 2){
+    if(parameter <= 1){
         printf("%d\n", key);
     }
     else{
@@ -151,4 +150,20 @@ void printField(char* str, int64_t offset, int key, int parameter){
         }
     }
     printf("\noffset = %ld\n", offset);
+}
+
+void readFieldStdin(Index_Data_t* array_elem, int parameter){
+    if(parameter <= 1){
+        int param;
+        scanf("%d", &param);
+        indexDataSetIntKey(array_elem, param);
+    }
+    else{
+        char* str = readQuote12();
+        indexDataSetStrKey(array_elem, str);
+    }
+    
+    int64_t cast = (int64_t) parameter;
+    indexDataSetOffset(array_elem, cast);
+    
 }

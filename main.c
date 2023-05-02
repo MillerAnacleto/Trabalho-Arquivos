@@ -32,16 +32,21 @@ int main(void) {
     switch (option) {
     case 1:
         SQLCreateTable();
-
         break;
+
     case 2:
         // função do tranche;
         SQLSelectFrom();
-
         break;
+
     case 3:
         SQLCreateIndex();
         break;
+
+    case 4:
+        SQLSelectWhere();
+        break;
+
     default:
         printf("funcionalidade inválida\n");
 

@@ -27,6 +27,8 @@ int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header);
  */
 Bin_Header_t* binHeaderBinaryRead(FILE* binary_file);
 
+Index_Header_t* indexHeaderRead(FILE* index);
+
 int indexHeaderWrite(FILE* binary_file, Index_Header_t* header);
 
 #endif // !HEADER_H_

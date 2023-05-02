@@ -44,18 +44,98 @@ void SQLCreateIndex(){
     char read_file_name[30];
     char index_file_name[30];
     int checker; 
+    char* consume;
+
     checker= scanf("%s", read_file_name);
     if (checker == 0) {
         errorFile();
     }
 
     int parameter = searchParameter();
+    scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
 
     checker= scanf("%s", index_file_name);
     if (checker == 0) {
         errorFile();
     }
-    //printf("parameter = %d\n", parameter);
     int64_t offset = 0;
     fileIndexCreate(read_file_name, index_file_name, parameter, &offset);
+}
+
+void SQLSelectWhere(){
+
+    char read_file_name[30];
+    char index_file_name[30];
+    int checker; 
+    char consume[30];
+    int parameter;
+    int index_parameter;
+    char binary_flag = 0; //flag para busca binária
+    int search_num = 0;
+    int parameter_num = 0;
+
+    checker= scanf("%s", read_file_name);
+    if (checker == 0) {
+        errorFile();
+    }
+
+    index_parameter = searchParameter();
+    scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
+
+    checker= scanf("%s", index_file_name);
+    if (checker == 0) {
+        errorFile();
+    }  
+
+    fileIndexRead(index_file_name, index_parameter);
+
+    // scanf("%d", &search_num);
+    
+    // //fazer uma função que é o que está aqui embaixo:
+    // for(int i = 0; i < search_num; i++){
+    //     scanf("%d", &parameter_num);
+
+    //     Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
+    //     for(int kj = 0; kj < parameter_num; kj++){
+    //         array[kj] = indexDataCreate();
+    //     }
+
+    //     for(int j = 0; j < parameter_num; j++){
+            
+    //         parameter = searchParameter();
+    //         if(parameter == index_parameter){
+    //             binary_flag = 1;
+    //         }
+    //         readFieldStdin(array[j], parameter);
+    //     }
+
+    //     if(binary_flag){
+    //         //binarySearchIndexArray(Param_array, index_file, binary_file);
+    //     }
+    //     else{
+    //         //linearSearchBinaryFile(Param_array, binary_file);
+    //     }
+    //     for(int m = 0; m < parameter_num; m++){
+            
+    //         if(indexDataGetIntKey(array[m]) == EMPTY_INT_FIELD){
+    //             char* str = indexDataGetStrKey(array[m]);
+    //             if(str != NULL){
+    //                 for(int k = 0; k < 12; k++){
+    //                     printf("%c", str[k]);
+    //                 }
+    //                 printf("\n");
+    //             }
+    //         }
+    //         else printf("%d\n", indexDataGetIntKey(array[m]));
+    //         printf("param = %ld\n", indexDataGetOffset(array[m]));
+    //     }
+    //     printf("\n\n");
+
+        
+
+    //     for(int kj = 0; kj < parameter_num; kj++){
+    //         indexDataDestroy(array[kj]);
+    //     }
+    //     free(array);
+    // }    
 }

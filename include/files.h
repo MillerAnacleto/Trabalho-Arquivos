@@ -30,5 +30,6 @@ void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name);
 
 void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset);
 
+Index_Node_t** fileIndexRead(char* index_filename, int parameter);
 
 #endif // !FILES_H_

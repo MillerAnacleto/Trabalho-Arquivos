@@ -106,6 +106,41 @@ void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
     binarioNaTela(binary_file_name);
 }
 
+int indexArrayPrint(Index_Node_t** index_array, int size){
+
+    int acc = 0;
+    Index_Data_t* data;
+
+    for(int i = 0; i < size; i++){
+
+        Index_Node_t* next = index_array[i];
+
+        while(next != NULL){
+            
+            printf("i = %d\n", i);
+            data = indexNodeGetData(next);
+            int64_t offset = indexDataGetOffset(data);
+            int int_key =  indexDataGetIntKey(data);
+            char* char_key = indexDataGetStrKey(data);
+
+            if(int_key != EMPTY_INT_FIELD){
+                printf("%d ", int_key);
+                //acc += fwrite(&int_key, sizeof(int), 1, index_file);
+            }
+            else if(char_key != NULL){
+                printf("%c%c%c%c ", char_key[0], char_key[1], char_key[2], char_key[3]);
+                //acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
+            }
+            printf("%ld\n", offset);
+            //acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
+
+            next = indexNodeGetNext(next);
+        }
+    }
+
+    return acc;
+}
+
 void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset){
 
     FILE* read_file = binaryFileOpenRead(binary_file_name);
@@ -122,6 +157,8 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
     Index_Node_t** index_array = indexArrayCreate(size);
     
     int non_empty = 0;
+
+    //colocar o que está dentro do for numa função.
     for(int i = 0; i < size; i++){
         Index_Data_t* data = indexDataCreate();
         
@@ -135,33 +172,62 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
         indexDataSetIntKey(data, int_key);
         
         if(exists){
-            indexArraySetData(index_array, non_empty, data);
+            indexNodeSetData(index_array, non_empty, data);
             non_empty++;
         }
         else{
             free(data);
         }
     }
+    fileClose(read_file);
 
     dataIndexArraySort(index_array, non_empty, parameter);
 
+    //modularizar melhor? Talvez fazer numa função de write?
     FILE* index_file = binaryFileOpenWrite(index_file_name);
     
     indexHeaderWrite(index_file, index_header);
-    indexArrayWrite(index_file, index_array, non_empty);
+    dataIndexArrayWrite(index_file, index_array, non_empty);
 
-    indexArrayDestroy(index_array, size, non_empty);    
+    indexArrayDestroy(index_array, size, non_empty);
 
     indexHeaderSetStatus(index_header, '1');
+    indexHeaderSetNum(index_header, non_empty);
     fseek(index_file,0, SEEK_SET);
     indexHeaderWrite(index_file, index_header);
     
     free(index_header);
     free(header);
-
-    fileClose(read_file);
+    
     fileClose(index_file);
 
     binarioNaTela(index_file_name);
 }
 
+Index_Node_t** fileIndexRead(char* index_filename, int parameter ){
+    
+    int node_num = 0; 
+    int diff_node_num = 0;
+    
+    FILE* index = binaryFileOpenRead(index_filename);
+    Index_Header_t* header = indexHeaderRead(index);
+    int size = indexHeaderGetNum(header);
+
+    if(header == NULL) return NULL;
+
+    Index_Node_t** array = indexArrayCreate(size);
+
+    if(parameter <= 1){
+        dataIndexArrayIntRead(index, array, size, &node_num, &diff_node_num);
+    }
+    else{
+        dataIndexArrayStrRead(index, array, size, &node_num, &diff_node_num);
+    }   
+
+    indexArrayPrint(array, diff_node_num);
+    indexArrayDestroy(array, node_num, diff_node_num);
+
+    free(header);
+    fileClose(index);
+    return array;
+}

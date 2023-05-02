@@ -126,35 +126,34 @@ int varStrSize(Data_t* data){
 
 int searchParameter(){
     char field_name[20];
-    char field_type[10];
+    
 
     scanf("%s", field_name);
-    scanf("%s", field_type);
+    printf("FIELD NAME = %s\n", field_name);
 
-    if(field_type[0] == 's'){
-        
-        switch (field_name[0]){
-        case 'd':
-            if(field_name[1] == 'a'){
-                return 1;
-            }
-            return 5;
+    switch (field_name[0]){ 
+    case 'i': 
+        return 0;
 
-        case 'm':
-            return 3;
-            
-        case 'l':
-            return 4;
-        
-        default:
-            return -1;
-        }
-    }
-    else{
-        if(field_name[0] == 'i') return 0;
-        if(field_name[0] == 'n') return 2;
-    }
+    case 'n':
+        return 1;
     
+    case 'd':
+        if(field_name[1] == 'a'){
+            return 2;
+        }
+        return 3;
+        
+    case 'l':
+        return 4;
+
+    case 'm':
+        return 5;
+
+    default:
+        return -1;
+    }
+
     return -1;
 }
 
@@ -174,6 +173,40 @@ char* copyConstVarStr(char* str1){
     }
 
     return str2;
+}
+
+char* readQuote12(){
+
+    char* str = malloc(12*sizeof(char));
+    int size = 0;
+    char read = '\0';
+    scanf("%c", &read);
+    char dq = '"';
+    while(read != dq){
+        scanf("%c", &read);
+    }
+
+    scanf("%c", &read);
+    
+    while(size < 12 && read != dq){
+        str[size] = read;
+        size++;
+        scanf("%c", &read);
+    }
+    if(size < 12){
+        while(size < 12){
+            str[size] = '$';
+            size++;
+        }
+    }
+    else{
+        while(read != dq){
+            scanf("%c", &read);
+        }
+    }
+
+    return str;
+
 }
 
 

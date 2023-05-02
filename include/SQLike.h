@@ -5,5 +5,6 @@
 void SQLCreateTable();
 void SQLSelectFrom();
 void SQLCreateIndex();
+void SQLSelectWhere();
 
 #endif

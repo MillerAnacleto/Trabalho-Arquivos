@@ -100,4 +100,6 @@ char* copyConstVarStr(char* str1);
 // given function to produce an output based on the header that was written
 void binarioNaTela(char* nomeArquivoBinario);
 
+char* readQuote12();
+
 #endif // !AUX_H_

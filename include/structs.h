@@ -24,6 +24,10 @@ Index_Data_t* indexDataCreate();
 char indexHeaderGetStatus(Index_Header_t* header);
 void indexHeaderSetStatus(Index_Header_t* header, char status);
 
+int indexHeaderGetNum(Index_Header_t* header);
+
+void indexHeaderSetNum(Index_Header_t* header, int num);
+
 int64_t indexDataGetOffset(Index_Data_t* data);
 void indexDataSetOffset(Index_Data_t* data, int64_t offset);
 
@@ -40,16 +44,19 @@ void stringDataDestroy(Index_Data_t* string_data);
 //---------------- estrutura de dados array com lista ligada -----------------//
 
 
+
 typedef struct index_node_ Index_Node_t;
 
-
+Index_Node_t* indexNodeCreate(Index_Data_t* data);
 Index_Node_t** indexArrayCreate(int node_num);
 
-Index_Data_t* indexArrayGetData(Index_Node_t* node);
-void indexArraySetData(Index_Node_t** node, int pos, Index_Data_t* data);
+Index_Data_t* indexNodeGetData(Index_Node_t* node);
+void indexNodeSetData(Index_Node_t** node, int pos, Index_Data_t* data);
 
-Index_Node_t* indexArrayGetNext(Index_Node_t* node);
-void indexArraySetNext(Index_Node_t* node, Index_Node_t* next);
+Index_Node_t* indexNodeGetNext(Index_Node_t* node);
+void indexNodeSetNext(Index_Node_t* node, Index_Node_t* next);
+
+Index_Node_t* indexNodeStackData(Index_Node_t* node, Index_Node_t* next);
 
 int indexDataStrCmp(const void *a, const void *b);
 int indexDataIntCmp(const void *a, const void *b);
