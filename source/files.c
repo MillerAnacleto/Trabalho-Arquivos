@@ -11,13 +11,13 @@
 void fileBinaryPrintAsCsv(char* file_name) {
 
     FILE* binary_file = binaryFileOpenRead(file_name);
-    Bin_Header_t* header = binHeaderBinaryRead(binary_file);
+    Bin_Header_t* header = binHeaderRead(binary_file);
     if (headerGetStatus(header) == '0') {
         fileClose(binary_file);
         errorFile();
     }
 
-    Data_t* data;
+    Bin_Data_t* data;
     int num_structs = headerGetStructNum(header);
     if (num_structs != 0) {
         for (int i = 0; i < num_structs; i++) {
@@ -40,7 +40,7 @@ void fileBinaryPrintAsCsv(char* file_name) {
 }
 
 void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
-    Data_t* data;
+    Bin_Data_t* data;
 
     int size_array[2];   // array to store the size of variable strings
     int accumulator = 0; // accumulator to calculate the offset byte
@@ -145,10 +145,10 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
 
     FILE* read_file = binaryFileOpenRead(binary_file_name);
 
-    Bin_Header_t* header = binHeaderBinaryRead(read_file);
+    Bin_Header_t* header = binHeaderRead(read_file);
     int size = headerGetStructNum(header);
     *offset += 17; //offset provocado pelo header
-    char* str = NULL;
+    //char* str = NULL;
 
     Index_Header_t* index_header = indexHeaderCreate();
     indexHeaderSetStatus(index_header, '0');
@@ -158,18 +158,14 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
     
     int non_empty = 0;
 
+    Index_Data_t* data;
     //colocar o que está dentro do for numa função.
     for(int i = 0; i < size; i++){
-        Index_Data_t* data = indexDataCreate();
-        
+            
         int64_t offset_temp = *offset;
-        indexDataSetOffset(data, offset_temp);
-
-        int int_key = EMPTY_INT_FIELD;
         char exists = 0;
-        str = readBinaryField(read_file, parameter, offset, &int_key, &exists);
-        indexDataSetStrKey(data, str);
-        indexDataSetIntKey(data, int_key);
+        data = readBinaryField(read_file, parameter, offset, &exists);
+        indexDataSetOffset(data, offset_temp);
         
         if(exists){
             indexNodeSetData(index_array, non_empty, data);
@@ -224,10 +220,126 @@ Index_Node_t** fileIndexRead(char* index_filename, int parameter ){
         dataIndexArrayStrRead(index, array, size, &node_num, &diff_node_num);
     }   
 
-    indexArrayPrint(array, diff_node_num);
+    //indexArrayPrint(array, diff_node_num);
     indexArrayDestroy(array, node_num, diff_node_num);
 
     free(header);
     fileClose(index);
     return array;
+}
+
+char SearchBinaryFile(char* filename, int index_parameter){
+
+    char found = 0;
+    FILE* binary_file = binaryFileOpenRead(filename);
+    int parameter_num = 0;
+    int parameter = 0;
+    //char binary_flag = 0;
+    scanf("%d", &parameter_num);
+
+    Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
+    for(int kj = 0; kj < parameter_num; kj++){
+        array[kj] = indexDataCreate();
+    }
+
+    for(int j = 0; j < parameter_num; j++){
+        
+        parameter = searchParameter();
+        if(parameter == index_parameter){
+            //binary_flag = 1;
+        }
+        readFieldStdin(array[j], parameter);
+    }
+
+    
+    // if(binary_flag){
+    //     //binarySearchIndexArray(Param_array, index_file, binary_file);
+    // }
+    //else{
+    found =  linearSearchBinaryFile(binary_file, array, parameter_num);
+    //}
+
+    // for(int m = 0; m < parameter_num; m++){
+        
+    //     if(indexDataGetIntKey(array[m]) == EMPTY_INT_FIELD){
+    //         char* str = indexDataGetStrKey(array[m]);
+    //         if(str != NULL){
+    //             for(int k = 0; k < 12; k++){
+    //                 printf("%c", str[k]);
+    //             }
+    //             printf("\n");
+    //         }
+    //     }
+    //     else printf("%d\n", indexDataGetIntKey(array[m]));
+    //     printf("param = %ld\n", indexDataGetOffset(array[m]));
+    // }
+    // printf("\n\n");
+
+    
+
+    for(int kj = 0; kj < parameter_num; kj++){
+        indexDataDestroy(array[kj]);
+    }
+    free(array);
+
+    fileClose(binary_file);
+
+    return found;
+}
+
+char linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size){
+    char found = 0;
+    Bin_Header_t* header;
+    header = binHeaderRead(file);
+    int struct_num = headerGetStructNum(header);
+    //char exists;
+
+    //int param = (int)indexDataGetOffset(array[0]);
+
+    for(int i = 0; i < struct_num; i++){
+        Bin_Data_t* bin_data = dataBinaryRead(file);
+        if(dataGetRemoved(bin_data) == '1'){
+            dataDestroy(bin_data);
+            continue;
+        }
+
+        //if(cmp == array[i]) printDataCsvStyle(data);
+
+        //comparar todos os campos do array com data (Bin_data)
+        //para isso, criar uma função que retorna o campo dado o parâmetro
+
+        //fazer uma função que compara:
+        //bin_data e array (param está no offset)
+        //cada iteração deve comparar um campo que está no array[i]
+        //e algum dos campos do bin_data, para isso fazer uma função
+        //que retorna os campos de acordo com o valor do parâmetro fornecido.
+        //ou seja, a função allParamCompare deve ser algo como:
+
+        if(dataParamCompare(bin_data, array, array_size)){
+            found = 1;
+            dataPrintCsvStyle(bin_data);
+            printf("\n");
+        }
+
+        dataDestroy(bin_data);
+        // for(int i = 0; i < arr_size; i++){
+        //      compare(bin_data, array[i]);
+        // onde compare bin_data, array[i] => 
+        //          int param = array[i]->offset;
+        //          switch (param):
+        //          case 0: 
+        //              if(bin_data->id == array[i]->int_key) ...
+        //              return 1; ou return 0;
+        //          case n:
+        //              str1 = bin_data->lugar;
+        //              str2 = array[i]->str_key; 
+        //              break;
+        //          compare(str1, str2) return 1 if equal, 0 if diff.
+          
+        
+    }
+
+    free(header);
+
+    return found;
 }

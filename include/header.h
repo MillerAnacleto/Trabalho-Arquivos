@@ -25,7 +25,7 @@ int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header);
  *
  * @return returns the filled header struct
  */
-Bin_Header_t* binHeaderBinaryRead(FILE* binary_file);
+Bin_Header_t* binHeaderRead(FILE* binary_file);
 
 Index_Header_t* indexHeaderRead(FILE* index);
 

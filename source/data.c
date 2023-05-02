@@ -8,8 +8,8 @@
 #include <input_output.h>
 #include <structs.h>
 
-Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
-    Data_t* data = dataCreate();
+Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
+    Bin_Data_t* data = dataCreate();
     int str_size = 0;
 
     if (endFileChecker(csv_file)) {
@@ -39,8 +39,8 @@ Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
     return data;
 }
 
-Data_t* dataBinaryRead(FILE* binary_file) {
-    Data_t* data = dataCreate();
+Bin_Data_t* dataBinaryRead(FILE* binary_file) {
+    Bin_Data_t* data = dataCreate();
     char checker;
 
     char rmvd;
@@ -86,7 +86,7 @@ Data_t* dataBinaryRead(FILE* binary_file) {
     return data;
 }
 
-int dataBinaryWrite(FILE* binary_file, Data_t* data, int* size_array) {
+int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array) {
     int acc = 0; // accumulator for write verification
     
     char rmvd = dataGetRemoved(data);
@@ -143,7 +143,7 @@ char* readBinaryVarString(FILE* binary_file) {
     return str;
 }
 
-void dataPrintCsvStyle(Data_t* data) {
+void dataPrintCsvStyle(Bin_Data_t* data) {
     char* aux_str;
 
     printf("%d, ", dataGetId(data));
@@ -276,7 +276,7 @@ void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* nod
     for(int i = 1; i < size; i++){
         Index_Data_t* data = indexDataReadInt(index);
         curr_val = indexDataGetIntKey(data);
-        int64_t offset_check = indexDataGetOffset(data);
+        // int64_t offset_check = indexDataGetOffset(data);
         
         if(curr_val == last_val){
             Index_Node_t* next = indexNodeCreate(data);
@@ -327,4 +327,70 @@ void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* nod
     }
     *diff_node_num = curr_pos;
     *node_num = size;
+}
+
+int dataGetIntField(Bin_Data_t* data, int param){
+    if(param == 0) return dataGetId(data);
+    return dataGetArticle(data);
+}
+
+char* dataGetStrField(Bin_Data_t* data, int param){
+
+    char* str;
+    switch (param){
+    case 2:
+        str = copyConstVarStr(dataGetDate(data));
+        break;    
+
+    case 3:
+        str = copyConstVarStr(dataGetDescription(data));
+        break;
+
+    case 4:
+        str = copyConstVarStr(dataGetPlace(data));
+        break;
+
+    case 5:
+        str = copyConstVarStr(dataGetBrand(data));
+        break;
+
+    default:
+        return NULL;
+    }
+    
+    return str;
+}
+
+char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size){
+
+    char equal = 1;
+    for(int i = 0; i < array_size; i++){
+
+        int param = (int) indexDataGetOffset(array[i]);
+        if(param <= 1){
+            int cmp = dataGetIntField(bin_data, param);
+            if(cmp != indexDataGetIntKey(array[i])){
+                return 0;
+            }
+        }
+
+        else{
+
+            char* str1 = dataGetStrField(bin_data, param);
+            char* str2 = indexDataGetStrKey(array[i]);
+    
+            if(str1 == NULL) return 0;
+            
+            for(int j = 0; j < STR_SIZE; j++){
+                if(str1[j] != str2[j]){
+                    free(str1);
+                    return 0;
+                }
+            }
+
+            free(str1);
+        }
+    }
+
+    return equal;
 }

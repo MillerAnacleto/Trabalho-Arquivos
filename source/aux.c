@@ -116,7 +116,7 @@ int varStrTell(char* str){
     return size+1;
 }
 
-int varStrSize(Data_t* data){
+int varStrSize(Bin_Data_t* data){
     
     int total_size = varStrTell(dataGetPlace(data));
     total_size += varStrTell(dataGetDescription(data));
@@ -129,7 +129,6 @@ int searchParameter(){
     
 
     scanf("%s", field_name);
-    printf("FIELD NAME = %s\n", field_name);
 
     switch (field_name[0]){ 
     case 'i': 

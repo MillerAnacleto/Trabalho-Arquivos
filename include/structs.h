@@ -68,10 +68,10 @@ void indexArrayDestroy(Index_Node_t** array, int size, int non_empty);
 //----------------------- structs para arquivo binário -----------------------// 
 
 typedef struct Header Bin_Header_t;
-typedef struct Data Data_t;
+typedef struct Data Bin_Data_t;
 // functions to create/free the structs
-Data_t* dataCreate();
-void dataDestroy(Data_t* data);
+Bin_Data_t* dataCreate();
+void dataDestroy(Bin_Data_t* data);
 Bin_Header_t* headerCreate();
 
 char headerGetStatus(Bin_Header_t* header);
@@ -86,28 +86,28 @@ void headerSetStructNum(Bin_Header_t* header, int struct_num);
 int headerGetRemStructNum(Bin_Header_t* header);
 void headerSetRemStructNum(Bin_Header_t* header, int rem_struct_num);
 
-char dataGetRemoved(Data_t* data);
-void dataSetRemoved(Data_t* data, char removed);
+char dataGetRemoved(Bin_Data_t* data);
+void dataSetRemoved(Bin_Data_t* data, char removed);
 
-int dataGetId(Data_t* data);
-void dataSetId(Data_t* data, int id);
+int dataGetId(Bin_Data_t* data);
+void dataSetId(Bin_Data_t* data, int id);
 
-char* dataGetDate(Data_t* data);
-void dataSetDate(Data_t* data, char* date);
+char* dataGetDate(Bin_Data_t* data);
+void dataSetDate(Bin_Data_t* data, char* date);
 
-int dataGetArticle(Data_t* data);
-void dataSetArticle(Data_t* data, int article);
+int dataGetArticle(Bin_Data_t* data);
+void dataSetArticle(Bin_Data_t* data, int article);
 
-char* dataGetPlace(Data_t* data);
-void dataSetPlace(Data_t* data, char* crime_place);
+char* dataGetPlace(Bin_Data_t* data);
+void dataSetPlace(Bin_Data_t* data, char* crime_place);
 
-char* dataGetDescription(Data_t* data);
-void dataSetDescription(Data_t* data, char* description);
+char* dataGetDescription(Bin_Data_t* data);
+void dataSetDescription(Bin_Data_t* data, char* description);
 
-char* dataGetBrand(Data_t* data);
-void dataSetBrand(Data_t* data, char* brand);
+char* dataGetBrand(Bin_Data_t* data);
+void dataSetBrand(Bin_Data_t* data, char* brand);
 
-char dataGetDelimiter(Data_t* data);
-void dataSetDelimiter(Data_t* data, char delimiter);
+char dataGetDelimiter(Bin_Data_t* data);
+void dataSetDelimiter(Bin_Data_t* data, char delimiter);
 
 #endif // !STRUCTS_H_

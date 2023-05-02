@@ -55,7 +55,7 @@ void printConstString(char* str, int strlen);
  */
 char* readBinaryVarString(FILE* bin_file);
 
-char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char* exists);
+Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists);
 
 void printField(char* str, int64_t offset, int key, int parameter);
 

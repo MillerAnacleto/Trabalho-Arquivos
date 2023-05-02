@@ -223,15 +223,15 @@ struct Data {
     char delimiter;
 };
 
-Data_t* dataCreate() {
-    Data_t* data = calloc(1, sizeof(Data_t));
+Bin_Data_t* dataCreate() {
+    Bin_Data_t* data = calloc(1, sizeof(Bin_Data_t));
     data->removed = '0';
     data->delimiter = '#';
 
     return data;
 }
 
-void dataDestroy(Data_t* data) {
+void dataDestroy(Bin_Data_t* data) {
 
     free(data->crime_description);
     free(data->crime_place);
@@ -282,70 +282,70 @@ void headerSetRemStructNum(Bin_Header_t* header, int rem_struct_num){
     header->num_rem_structs = rem_struct_num;
 }
 
-char dataGetRemoved(Data_t* data){
+char dataGetRemoved(Bin_Data_t* data){
     return data->removed;
 }
 
-void dataSetRemoved(Data_t* data, char removed){
+void dataSetRemoved(Bin_Data_t* data, char removed){
     data->removed = removed;
 }
 
-int dataGetId(Data_t* data){
+int dataGetId(Bin_Data_t* data){
     return data->crime_id;
 }
 
-void dataSetId(Data_t* data, int id){
+void dataSetId(Bin_Data_t* data, int id){
     data->crime_id = id;
 }
 
-char* dataGetDate(Data_t* data){
+char* dataGetDate(Bin_Data_t* data){
     return data->crime_date;
 }
 
-void dataSetDate(Data_t* data, char* date){
+void dataSetDate(Bin_Data_t* data, char* date){
     for(int i = 0; i < DATE_SIZE; i++){
         data->crime_date[i] = date[i];
     }
 }
 
-int dataGetArticle(Data_t* data){
+int dataGetArticle(Bin_Data_t* data){
     return data->article_number;
 }
 
-void dataSetArticle(Data_t* data, int article){
+void dataSetArticle(Bin_Data_t* data, int article){
     data->article_number = article;
 }
 
-char* dataGetPlace(Data_t* data){
+char* dataGetPlace(Bin_Data_t* data){
     return data->crime_place;
 }
 
-void dataSetPlace(Data_t* data, char* crime_place){
+void dataSetPlace(Bin_Data_t* data, char* crime_place){
     data->crime_place = crime_place;
 }
 
-char* dataGetDescription(Data_t* data){
+char* dataGetDescription(Bin_Data_t* data){
     return data->crime_description;
 }
 
-void dataSetDescription(Data_t* data, char* description){
+void dataSetDescription(Bin_Data_t* data, char* description){
     data->crime_description = description;
 }
 
-char* dataGetBrand(Data_t* data){
+char* dataGetBrand(Bin_Data_t* data){
     return data->cellphone_brand;
 }
 
-void dataSetBrand(Data_t* data, char* brand){
+void dataSetBrand(Bin_Data_t* data, char* brand){
     for(int i = 0; i < BRAND_SIZE; i++){
         data->cellphone_brand[i] = brand[i];
     }
 } 
 
-char dataGetDelimiter(Data_t* data){
+char dataGetDelimiter(Bin_Data_t* data){
     return data->delimiter;
 }
 
-void dataSetDelimiter(Data_t* data, char delimiter){
+void dataSetDelimiter(Bin_Data_t* data, char delimiter){
     data->delimiter = delimiter;
 } 

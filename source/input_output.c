@@ -80,44 +80,27 @@ int32_t readCsvInt(FILE* csv_file) {
     return integer;
 }
 
-char* readBinaryField(FILE* file, int parameter, int64_t *offset, int* key, char* exists){
+Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists){
 
-    Data_t* data = dataBinaryRead(file);
+    Index_Data_t* idx_data = indexDataCreate();
+    Bin_Data_t* data = dataBinaryRead(file);
     *offset += 32 + varStrSize(data);
+    int key = EMPTY_INT_FIELD;
     char* str = NULL;
 
-    switch (parameter){
-    case 0:
-        *key = dataGetId(data);
-        break;
-        
-    case 1:
-        *key = dataGetArticle(data);
-        break;
-
-    case 2:
-        str = copyConstVarStr(dataGetDate(data));
-        break;    
-
-    case 3:
-        str = copyConstVarStr(dataGetDescription(data));
-        break;
-
-    case 4:
-        str = copyConstVarStr(dataGetPlace(data));
-        break;
-
-    case 5:
-        str = copyConstVarStr(dataGetBrand(data));
-        break;
-
-    default:
-        break;
+    if(parameter <= 1){
+        key = dataGetIntField(data, parameter);
+    }
+    else{
+        str = dataGetStrField(data, parameter);
     }
 
+    indexDataSetIntKey(idx_data, key);
+    indexDataSetStrKey(idx_data, str);
     dataDestroy(data);
-    if(str != NULL || (*key != EMPTY_INT_FIELD )) *exists = 1;
-    return str;
+    
+    if(str != NULL || (key != EMPTY_INT_FIELD )) *exists = 1;
+    return idx_data;
 }
 
 
@@ -162,7 +145,7 @@ void readFieldStdin(Index_Data_t* array_elem, int parameter){
         char* str = readQuote12();
         indexDataSetStrKey(array_elem, str);
     }
-    
+
     int64_t cast = (int64_t) parameter;
     indexDataSetOffset(array_elem, cast);
     

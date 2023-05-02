@@ -44,7 +44,7 @@ void SQLCreateIndex(){
     char read_file_name[30];
     char index_file_name[30];
     int checker; 
-    char* consume;
+    char consume[10];
 
     checker= scanf("%s", read_file_name);
     if (checker == 0) {
@@ -68,11 +68,10 @@ void SQLSelectWhere(){
     char index_file_name[30];
     int checker; 
     char consume[30];
-    int parameter;
     int index_parameter;
-    char binary_flag = 0; //flag para busca binária
+    //char binary_flag = 0; //flag para busca binária
     int search_num = 0;
-    int parameter_num = 0;
+    
 
     checker= scanf("%s", read_file_name);
     if (checker == 0) {
@@ -89,53 +88,17 @@ void SQLSelectWhere(){
 
     fileIndexRead(index_file_name, index_parameter);
 
-    // scanf("%d", &search_num);
+    scanf("%d", &search_num);
     
-    // //fazer uma função que é o que está aqui embaixo:
-    // for(int i = 0; i < search_num; i++){
-    //     scanf("%d", &parameter_num);
-
-    //     Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
-    //     for(int kj = 0; kj < parameter_num; kj++){
-    //         array[kj] = indexDataCreate();
-    //     }
-
-    //     for(int j = 0; j < parameter_num; j++){
-            
-    //         parameter = searchParameter();
-    //         if(parameter == index_parameter){
-    //             binary_flag = 1;
-    //         }
-    //         readFieldStdin(array[j], parameter);
-    //     }
-
-    //     if(binary_flag){
-    //         //binarySearchIndexArray(Param_array, index_file, binary_file);
-    //     }
-    //     else{
-    //         //linearSearchBinaryFile(Param_array, binary_file);
-    //     }
-    //     for(int m = 0; m < parameter_num; m++){
-            
-    //         if(indexDataGetIntKey(array[m]) == EMPTY_INT_FIELD){
-    //             char* str = indexDataGetStrKey(array[m]);
-    //             if(str != NULL){
-    //                 for(int k = 0; k < 12; k++){
-    //                     printf("%c", str[k]);
-    //                 }
-    //                 printf("\n");
-    //             }
-    //         }
-    //         else printf("%d\n", indexDataGetIntKey(array[m]));
-    //         printf("param = %ld\n", indexDataGetOffset(array[m]));
-    //     }
-    //     printf("\n\n");
-
+    //fazer uma função que é o que está aqui embaixo:
+    char found = 0;
+    for(int i = 0; i < search_num; i++){
         
-
-    //     for(int kj = 0; kj < parameter_num; kj++){
-    //         indexDataDestroy(array[kj]);
-    //     }
-    //     free(array);
-    // }    
+        printf("Resposta para a busca %d\n", i+1);
+        found = SearchBinaryFile(read_file_name, index_parameter);
+        if(!found){
+            printf("Registro inexistente.\n");
+        }
+    }
+    
 }

@@ -91,7 +91,7 @@ int isConstStringNull(char* str);
 
 int varStrTell(char* str);
 
-int varStrSize(Data_t* data);
+int varStrSize(Bin_Data_t* data);
 
 int searchParameter();
 

@@ -23,7 +23,7 @@ int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header) {
     return acc;
 }
 
-Bin_Header_t* binHeaderBinaryRead(FILE* binary_file){
+Bin_Header_t* binHeaderRead(FILE* binary_file){
     Bin_Header_t* header = headerCreate();
     char checker;
     
