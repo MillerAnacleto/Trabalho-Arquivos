@@ -3,12 +3,13 @@
 #include <sys/types.h> //para garantir o tamanho dos campos
 #include <aux.h>
 #include <data.h>
+#include <files.h>
 #include <header.h>
 #include <input_output.h>
 #include <structs.h>
 
-Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
-    Data_t* data = dataCreate();
+Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
+    Bin_Data_t* data = dataCreate();
     int str_size = 0;
 
     if (endFileChecker(csv_file)) {
@@ -38,8 +39,8 @@ Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
     return data;
 }
 
-Data_t* dataBinaryRead(FILE* binary_file) {
-    Data_t* data = dataCreate();
+Bin_Data_t* dataBinaryRead(FILE* binary_file) {
+    Bin_Data_t* data = dataCreate();
     char checker;
 
     char rmvd;
@@ -85,7 +86,7 @@ Data_t* dataBinaryRead(FILE* binary_file) {
     return data;
 }
 
-int dataBinaryWrite(FILE* binary_file, Data_t* data, int* size_array) {
+int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array) {
     int acc = 0; // accumulator for write verification
     
     char rmvd = dataGetRemoved(data);
@@ -115,7 +116,6 @@ int dataBinaryWrite(FILE* binary_file, Data_t* data, int* size_array) {
     return acc;
 }
 
-
 char* readBinaryVarString(FILE* binary_file) {
     char* str = malloc(sizeof(char));
     char last_read = '\0';
@@ -142,7 +142,7 @@ char* readBinaryVarString(FILE* binary_file) {
     return str;
 }
 
-void dataPrintCsvStyle(Data_t* data) {
+void dataPrintCsvStyle(Bin_Data_t* data) {
     char* aux_str;
 
     printf("%d, ", dataGetId(data));
@@ -181,4 +181,214 @@ void dataPrintCsvStyle(Data_t* data) {
     } else {
         printf("NULO");
     }
+}
+
+void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter){
+
+    if(parameter <= 1){
+        qsort(index_array, size, sizeof(Index_Node_t*), indexDataIntCmp);
+        
+        return;
+    }
+
+    qsort(index_array, size, sizeof(Index_Node_t*), indexDataStrCmp);
+}
+
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size){
+
+    int acc = 0;
+    Index_Data_t* data;
+
+    for(int i = 0; i < size; i++){
+
+        Index_Node_t* next = index_array[i];
+
+        while(next != NULL){
+
+            data = indexNodeGetData(index_array[i]);
+            int64_t offset = indexDataGetOffset(data);
+            int int_key =  indexDataGetIntKey(data);
+            char* char_key = indexDataGetStrKey(data);
+
+            if(int_key != EMPTY_INT_FIELD){
+                acc += fwrite(&int_key, sizeof(int), 1, index_file);
+            }
+            else if(char_key != NULL){
+                acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
+            }
+            acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
+            next = indexNodeGetNext(next);
+        }
+    }
+
+    return acc;
+}
+
+Index_Data_t* indexDataReadInt(FILE* index){
+    Index_Data_t* data = indexDataCreate();
+    int key = EMPTY_INT_FIELD;
+    int64_t offset = -1;
+    char* str = NULL;
+    //int checker;
+
+    fread(&key, sizeof(int), 1, index);
+    fread(&offset, sizeof(int64_t), 1, index);
+
+    indexDataSetIntKey(data, key);
+    indexDataSetOffset(data, offset);
+    indexDataSetStrKey(data, str);
+
+    return data;
+}
+
+Index_Data_t* indexDataReadStr(FILE* index){
+    Index_Data_t* data = indexDataCreate();
+    int key = EMPTY_INT_FIELD;
+    int64_t offset = -1;
+    char* str = malloc(12*sizeof(char));
+
+    fread(str, sizeof(char), 12, index);
+    fread(&offset, sizeof(int64_t), 1, index);
+
+    indexDataSetIntKey(data, key);
+    indexDataSetOffset(data, offset);
+    indexDataSetStrKey(data, str);
+
+    return data;
+}
+
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
+
+    int curr_pos = 0;
+    int last_val = 0;
+    int curr_val = 0;
+
+    Index_Node_t* curr_elem = NULL;
+    Index_Node_t* next_elem = NULL;
+    Index_Data_t* data = indexDataReadInt(index);
+    last_val = indexDataGetIntKey(data);
+
+    indexNodeSetData(array, curr_pos, data);
+    curr_pos++;
+    curr_elem = array[0];
+
+    for(int i = 1; i < size; i++){
+        Index_Data_t* data = indexDataReadInt(index);
+        curr_val = indexDataGetIntKey(data);
+        
+        if(curr_val == last_val){
+            Index_Node_t* next = indexNodeCreate(data);
+            next_elem = indexNodeStackData(curr_elem, next);
+            curr_elem = next_elem;
+        }
+        else{
+            indexNodeSetData(array, curr_pos, data);
+            curr_elem = array[curr_pos];
+            last_val = curr_val;
+            curr_pos++;
+        }
+    }
+    *diff_node_num = curr_pos;
+    *node_num = size;
+}
+
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
+
+    int curr_pos = 0;
+    char* last_val;
+    char* curr_val;
+
+    Index_Node_t* curr_elem = NULL;
+    Index_Node_t* next_elem = NULL;
+    Index_Data_t* data = indexDataReadStr(index);
+    last_val = indexDataGetStrKey(data);
+
+    indexNodeSetData(array, curr_pos, data);
+    curr_pos++;
+    curr_elem = array[0];
+
+    for(int i = 1; i < size; i++){
+        Index_Data_t* data = indexDataReadStr(index);
+        curr_val = indexDataGetStrKey(data);
+        
+        if( stringnCmp(curr_val, last_val, STR_SIZE) == 0){
+            Index_Node_t* next = indexNodeCreate(data);
+            next_elem = indexNodeStackData(curr_elem, next);
+            curr_elem = next_elem;
+        }
+        else{
+            indexNodeSetData(array, curr_pos, data);
+            curr_elem = array[curr_pos];
+            last_val = curr_val;
+            curr_pos++;
+        }
+    }
+    *diff_node_num = curr_pos;
+    *node_num = size;
+}
+
+int dataGetIntField(Bin_Data_t* data, int param){
+    if(param == 0) return dataGetId(data);
+    return dataGetArticle(data);
+}
+
+char* dataGetStrField(Bin_Data_t* data, int param){
+
+    char* str;
+    switch (param){
+    case 2:
+        str = copyConstVarStr(dataGetDate(data));
+        break;    
+
+    case 3:
+        str = copyConstVarStr(dataGetDescription(data));
+        break;
+
+    case 4:
+        str = copyConstVarStr(dataGetPlace(data));
+        break;
+
+    case 5:
+        str = copyConstVarStr(dataGetBrand(data));
+        break;
+
+    default:
+        return NULL;
+    }
+    
+    return str;
+}
+
+char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size){
+
+    char equal = 1;
+    for(int i = 0; i < array_size; i++){
+
+        int param = (int) indexDataGetOffset(array[i]);
+        if(param <= 1){
+            int cmp = dataGetIntField(bin_data, param);
+            if(cmp != indexDataGetIntKey(array[i])){
+                return 0;
+            }
+        }
+
+        else{
+
+            char* str1 = dataGetStrField(bin_data, param);
+            char* str2 = indexDataGetStrKey(array[i]);
+    
+            if(str1 == NULL) return 0;
+            
+            for(int j = 0; j < STR_SIZE; j++){
+                if(str1[j] != str2[j]){
+                    free(str1);
+                    return 0;
+                }
+            }
+
+            free(str1);
+        }
+    }
+
+    return equal;
 }

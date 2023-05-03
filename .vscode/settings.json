@@ -2,7 +2,8 @@
     "files.associations": {
         "types.h": "c",
         "stdint.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "input_output.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

@@ -9,6 +9,8 @@
 #include <input_output.h>
 #include <structs.h>
 
+#define EMPTY_INT_FIELD -1
+
 /**
  * @brief The function reads the header, gets the number of registries in the file, 
  * reads and prints the registries one by one
@@ -25,5 +27,18 @@ void fileBinaryPrintAsCsv(char* file_name);
  * @param binary_file_name binary file to be opened/created
  */
 void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name);
+
+void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset);
+
+Index_Node_t** fileIndexRead(char* index_filename, int parameter);
+
+char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
+
+char linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size);
+
+char binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,
+    int parameter_num, int parameter_index);
+
+
 
 #endif // !FILES_H_
