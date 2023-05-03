@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <aux.h>
+#include <data.h>
+#include <files.h>
 #include <header.h>
 #include <input_output.h>
 #include <structs.h>
@@ -62,7 +64,7 @@ int32_t readCsvInt(FILE* csv_file) {
     int str_size = 0;
 
     char checker = fread(&last_read[0], sizeof(char), 1, csv_file);
-    endFileAssert(checker, csv_file); // failure in reading displays the error message
+    endFileAssert(checker, csv_file); //failure displays the error message
 
     while (last_read[str_size] != ',') {
         str_size++;
@@ -76,4 +78,75 @@ int32_t readCsvInt(FILE* csv_file) {
     }
 
     return integer;
+}
+
+Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists){
+
+    Index_Data_t* idx_data = indexDataCreate();
+    Bin_Data_t* data = dataBinaryRead(file);
+    *offset += 32 + varStrSize(data);
+    int key = EMPTY_INT_FIELD;
+    char* str = NULL;
+
+    if(parameter <= 1){
+        key = dataGetIntField(data, parameter);
+    }
+    else{
+        str = dataGetStrField(data, parameter);
+    }
+
+    indexDataSetIntKey(idx_data, key);
+    indexDataSetStrKey(idx_data, str);
+    dataDestroy(data);
+    
+    if(str != NULL || (key != EMPTY_INT_FIELD )) *exists = 1;
+    return idx_data;
+}
+
+
+void printField(char* str, int64_t offset, int key, int parameter){
+
+    if(parameter > 1 && str == NULL){
+        printf("Não consta\n");
+        return;
+    }
+
+    if(parameter <= 1){
+        printf("%d\n", key);
+    }
+    else{
+        if(str[0] == '|' || str[0] == '$'){
+            printf("Não consta\n");
+        }
+
+        else{
+            int i = 0;
+            while( i < STR_SIZE && str[i] != '|' && str[i] != '\0'){
+                printf("%c", str[i]);
+                i++;
+            }
+            while(i < STR_SIZE){
+                printf("$");
+                i++;
+            }
+            printf("\n");
+        }
+    }
+    printf("\noffset = %ld\n", offset);
+}
+
+void readFieldStdin(Index_Data_t* array_elem, int parameter){
+    if(parameter <= 1){
+        int param;
+        scanf("%d", &param);
+        indexDataSetIntKey(array_elem, param);
+    }
+    else{
+        char* str = readQuote12();
+        indexDataSetStrKey(array_elem, str);
+    }
+
+    int64_t cast = (int64_t) parameter;
+    indexDataSetOffset(array_elem, cast);
+    
 }

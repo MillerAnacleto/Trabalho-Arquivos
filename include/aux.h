@@ -89,6 +89,18 @@ void fileClose(FILE* file);
  */
 int isConstStringNull(char* str);
 
+int varStrTell(char* str);
+
+int varStrSize(Bin_Data_t* data);
+
+int searchParameter();
+
+char* copyConstVarStr(char* str1);
+
+char* readQuote12();
+
+int stringnCmp(char* str1, char* str2, int size);
+
 // given function to produce an output based on the header that was written
 void binarioNaTela(char* nomeArquivoBinario);
 

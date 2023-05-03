@@ -102,6 +102,122 @@ void fileClose(FILE* file) {
     }
 }
 
+int varStrTell(char* str){
+
+    if(str == NULL){
+        return 0;
+    }
+    int size = 0;
+
+    while(str[size] != '\0' && str[size] != '|'){
+        size++;
+    }
+
+    return size+1;
+}
+
+int varStrSize(Bin_Data_t* data){
+    
+    int total_size = varStrTell(dataGetPlace(data));
+    total_size += varStrTell(dataGetDescription(data));
+    
+    return total_size;
+}
+
+int searchParameter(){
+    char field_name[20];
+    
+
+    scanf("%s", field_name);
+
+    switch (field_name[0]){ 
+    case 'i': 
+        return 0;
+
+    case 'n':
+        return 1;
+    
+    case 'd':
+        if(field_name[1] == 'a'){
+            return 2;
+        }
+        return 3;
+        
+    case 'l':
+        return 4;
+
+    case 'm':
+        return 5;
+
+    default:
+        return -1;
+    }
+
+    return -1;
+}
+
+char* copyConstVarStr(char* str1){
+
+    if(str1 == NULL || str1[0] == '|' || str1[0] == '$') return NULL;
+    int i = 0;
+    char* str2 = malloc(STR_SIZE*sizeof(char));
+
+    while( i < STR_SIZE && str1[i] != '|' && str1[i] != '$' && str1[i] != '\0'){
+        str2[i] = str1[i];
+        i++;
+    }
+    while(i < STR_SIZE){
+        str2[i] = '$';
+        i++;
+    }
+
+    return str2;
+}
+
+char* readQuote12(){
+
+    char* str = malloc(12*sizeof(char));
+    int size = 0;
+    char read = '\0';
+    scanf("%c", &read);
+    char dq = '"';
+    while(read != dq){
+        scanf("%c", &read);
+    }
+
+    scanf("%c", &read);
+    
+    while(size < 12 && read != dq){
+        str[size] = read;
+        size++;
+        scanf("%c", &read);
+    }
+    if(size < 12){
+        while(size < 12){
+            str[size] = '$';
+            size++;
+        }
+    }
+    else{
+        while(read != dq){
+            scanf("%c", &read);
+        }
+    }
+
+    return str;
+
+}
+
+int stringnCmp(char* str1, char* str2, int size){
+
+    for(int i = 0; i < size; i++){
+        
+        int j = str1[i] - str2[i];
+        if(j != 0) return j;
+    }
+    return 0;
+}
+
 void binarioNaTela(char* nomeArquivoBinario) {
     /*
      * Você não precisa entender o código dessa função.

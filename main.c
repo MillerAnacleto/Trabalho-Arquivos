@@ -1,6 +1,6 @@
 /**
  * @file main.c
- * @author Guilherme da Motta Tranche (13671549) && Téo Sobrino Alves (12557192)
+ * @author Miller Matheus Lima Anacleto Rocha (13727954) && Téo Sobrino Alves (12557192)
  * 
  * @brief Trabalho introdutório da disciplina de organização
  * de arquivos 1S 2023
@@ -19,7 +19,6 @@
 #include <SQLike.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include<index.h>
 
 int main(void) {
 
@@ -30,27 +29,29 @@ int main(void) {
         exit(2);
     }
 
-    FILE* file = fopen("b.bin", "rb");
-
     switch (option) {
     case 1:
         SQLCreateTable();
-
         break;
+
     case 2:
         // função do tranche;
         SQLSelectFrom();
+        break;
 
-        break;
     case 3:
-        readBinaryWriteIndex(file);
+        SQLCreateIndex();
         break;
+
+    case 4:
+        SQLSelectWhere();
+        break;
+
     default:
         printf("funcionalidade inválida\n");
 
         break;
     }
 
-    fclose(file);
     return 0;
 }

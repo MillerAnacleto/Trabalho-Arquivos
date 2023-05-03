@@ -16,17 +16,17 @@
  * @param size_array keeps the variable strings size, to be summated
  * for calculating the offset byte
  *
- * @return Data_t* returns the filled data struct
+ * @return Bin_Data_t* returns the filled data struct
  */
-Data_t* dataCsvRead(FILE* csv_file, int* size_array);
+Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array);
 
 /**
  * @brief reads one registry of the file
  *
  * @param bin_file file that will be read
- * @return Data_t* the data read from the file
+ * @return Bin_Data_t* the data read from the file
  */
-Data_t* dataBinaryRead(FILE* bin_file);
+Bin_Data_t* dataBinaryRead(FILE* bin_file);
 
 /**
  * @brief writes the data struct fields into a file in binary
@@ -39,13 +39,27 @@ Data_t* dataBinaryRead(FILE* bin_file);
  *
  * @return int controls the number of writes to verify if all fields were written
  */
-int dataBinaryWrite(FILE* binary_file, Data_t* data, int* size_array);
+int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array);
 
 /**
  * @brief Receives a registry and prints its value following the given rules
  *
  * @param data data that will be printed
  */
-void dataPrintCsvStyle(Data_t* data);
+void dataPrintCsvStyle(Bin_Data_t* data);
+
+void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter);
+
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size);
+
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+
+char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size);
+
+int dataGetIntField(Bin_Data_t* data, int param);
+
+char* dataGetStrField(Bin_Data_t* data, int param);
 
 #endif // !DATA_H_
