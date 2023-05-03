@@ -97,9 +97,11 @@ int searchParameter();
 
 char* copyConstVarStr(char* str1);
 
+char* readQuote12();
+
+int stringnCmp(char* str1, char* str2, int size);
+
 // given function to produce an output based on the header that was written
 void binarioNaTela(char* nomeArquivoBinario);
-
-char* readQuote12();
 
 #endif // !AUX_H_

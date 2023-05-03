@@ -116,7 +116,6 @@ int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array) {
     return acc;
 }
 
-
 char* readBinaryVarString(FILE* binary_file) {
     char* str = malloc(sizeof(char));
     char last_read = '\0';
@@ -276,7 +275,6 @@ void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* nod
     for(int i = 1; i < size; i++){
         Index_Data_t* data = indexDataReadInt(index);
         curr_val = indexDataGetIntKey(data);
-        // int64_t offset_check = indexDataGetOffset(data);
         
         if(curr_val == last_val){
             Index_Node_t* next = indexNodeCreate(data);
@@ -297,8 +295,8 @@ void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* nod
 void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
 
     int curr_pos = 0;
-    char* last_val = 0;
-    char* curr_val = 0;
+    char* last_val;
+    char* curr_val;
 
     Index_Node_t* curr_elem = NULL;
     Index_Node_t* next_elem = NULL;
@@ -313,7 +311,7 @@ void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* nod
         Index_Data_t* data = indexDataReadStr(index);
         curr_val = indexDataGetStrKey(data);
         
-        if(curr_val == last_val){
+        if( stringnCmp(curr_val, last_val, STR_SIZE) == 0){
             Index_Node_t* next = indexNodeCreate(data);
             next_elem = indexNodeStackData(curr_elem, next);
             curr_elem = next_elem;

@@ -208,6 +208,15 @@ char* readQuote12(){
 
 }
 
+int stringnCmp(char* str1, char* str2, int size){
+
+    for(int i = 0; i < size; i++){
+        
+        int j = str1[i] - str2[i];
+        if(j != 0) return j;
+    }
+    return 0;
+}
 
 void binarioNaTela(char* nomeArquivoBinario) {
     /*

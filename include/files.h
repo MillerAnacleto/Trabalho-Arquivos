@@ -32,8 +32,13 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
 
 Index_Node_t** fileIndexRead(char* index_filename, int parameter);
 
-char SearchBinaryFile(char* filename, int index_parameter);
+char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
 
 char linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size);
+
+char binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,
+    int parameter_num, int parameter_index);
+
+
 
 #endif // !FILES_H_

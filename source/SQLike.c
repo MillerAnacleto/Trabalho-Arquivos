@@ -95,7 +95,7 @@ void SQLSelectWhere(){
     for(int i = 0; i < search_num; i++){
         
         printf("Resposta para a busca %d\n", i+1);
-        found = SearchBinaryFile(read_file_name, index_parameter);
+        found = SearchBinaryFile(read_file_name, index_file_name, index_parameter);
         if(!found){
             printf("Registro inexistente.\n");
         }
