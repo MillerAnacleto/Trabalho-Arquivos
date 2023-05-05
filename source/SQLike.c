@@ -68,11 +68,10 @@ void SQLSelectWhere(){
     int checker; 
     char consume[30];
     int index_parameter;
-    //char binary_flag = 0; //flag para busca binária
     int search_num = 0;
     
 
-    checker= scanf("%s", read_file_name);
+    checker = scanf("%s", read_file_name);
     if (checker == 0) {
         errorFile();
     }
@@ -80,7 +79,7 @@ void SQLSelectWhere(){
     index_parameter = searchParameter();
     scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
 
-    checker= scanf("%s", index_file_name);
+    checker = scanf("%s", index_file_name);
     if (checker == 0) {
         errorFile();
     }  
@@ -95,7 +94,61 @@ void SQLSelectWhere(){
         
         printf("Resposta para a busca %d\n", i+1);
         found = SearchBinaryFile(read_file_name, index_file_name, index_parameter);
-        if(!found){
+        if(!found){ //
+            printf("Registro inexistente.\n");
+        }
+    }
+    
+}
+/*
+
+roda n vezes
+
+removiro = 1 no primeiro campo
+
+remover indice
+
+"Falha no processamento do arquivo."
+binario na tela
+
+*/
+
+void SQLDeleteWhere(){
+
+    char read_file_name[30];
+    char index_file_name[30];
+    int checker; 
+    char consume[30];
+    int index_parameter;
+    int search_num = 0;
+    
+
+    checker = scanf("%s", read_file_name);
+    if (checker == 0) {
+        errorFile();
+    }
+
+    index_parameter = searchParameter();
+    scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
+
+    checker = scanf("%s", index_file_name);
+    if (checker == 0) {
+        errorFile();
+    }  
+
+    fileIndexRead(index_file_name, index_parameter);
+
+    scanf("%d", &search_num);
+    
+    
+
+    //fazer uma função que é o que está aqui embaixo:
+    char found = 0;
+    for(int i = 0; i < search_num; i++){
+        
+        printf("Resposta para a busca %d\n", i+1);
+        found = SearchBinaryFile(read_file_name, index_file_name, index_parameter);
+        if(!found){ //
             printf("Registro inexistente.\n");
         }
     }

@@ -131,22 +131,22 @@ int searchParameter(){
     scanf("%s", field_name);
 
     switch (field_name[0]){ 
-    case 'i': 
+    case 'i':   //id
         return 0;
 
-    case 'n':
+    case 'n':   //article_number
         return 1;
     
-    case 'd':
-        if(field_name[1] == 'a'){
+    case 'd':   //crime_description
+        if(field_name[1] == 'a'){   //crime_date
             return 2;
         }
         return 3;
         
-    case 'l':
+    case 'l':   //place
         return 4;
 
-    case 'm':
+    case 'm':   //brand
         return 5;
 
     default:
