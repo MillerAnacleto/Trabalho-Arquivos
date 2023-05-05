@@ -253,6 +253,21 @@ char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter
         }
         readFieldStdin(array[j], parameter);
     }
+
+    // teste
+    for(int j = 0; j < parameter_num; j++){
+
+        int64_t cast = indexDataGetOffset(array[j]);
+
+        if(cast <= 1){
+            printf("%ld - %d\n", cast, indexDataGetIntKey(array[j]));
+        }
+        else{
+            printf("%ld - %s\n", cast, indexDataGetStrKey(array[j]));
+        }
+        
+    //     readFieldStdin(array[j], parameter);
+    }
     
     if(binary_flag){
         found = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index);

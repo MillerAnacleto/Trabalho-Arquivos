@@ -47,6 +47,10 @@ int main(void) {
         SQLSelectWhere();
         break;
 
+    case 5:
+        SQLDeleteWhere();
+        break;
+
     default:
         printf("funcionalidade inválida\n");
 
