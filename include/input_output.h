@@ -55,10 +55,26 @@ void printConstString(char* str, int strlen);
  */
 char* readBinaryVarString(FILE* bin_file);
 
+/**
+ * @brief reads a binry structs and returns the field inside an index data structs
+ * 
+ * @param file binary file being read
+ * @param parameter parameter to differentiate int from string to be read 
+ * @param offset offset to keep track of binary file position
+ * @param exists 1 case the field is non-empty, 0 case the field is empty
+ * @return index data struct containing the read field
+ */
 Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists);
 
+//função de teste
 void printField(char* str, int64_t offset, int key, int parameter);
 
+/**
+ * @brief reads a field from the standard input
+ * 
+ * @param array_elem index data that will hold the field
+ * @param parameter  parameter to differntiate string from int
+ */
 void readFieldStdin(Index_Data_t* array_elem, int parameter);
 
 #endif // !INPUT_OUTPUT_H_

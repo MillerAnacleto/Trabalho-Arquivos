@@ -125,11 +125,15 @@ int varStrSize(Bin_Data_t* data){
 }
 
 int searchParameter(){
-    char field_name[20];
     
-
+    char field_name[20];
     scanf("%s", field_name);
 
+    //we only need to analyze the first two letters:
+    /*
+    * idCrime, numeroArtigo, dataCrime, descricaoCrime, lugarCrime, marcaCelular
+    * only two terms match more than the first letter (data and descricao).
+    */
     switch (field_name[0]){ 
     case 'i':   //id
         return 0;
