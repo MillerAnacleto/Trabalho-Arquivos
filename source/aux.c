@@ -218,6 +218,36 @@ int stringnCmp(char* str1, char* str2, int size){
     return 0;
 }
 
+int64_t* offsetArrayCreate(){
+    
+    int64_t* offset_array = calloc(10, sizeof(int64_t));
+    offset_array[0] = -1;
+    return offset_array;
+}
+
+int64_t*  offsetArrayInsert(int64_t* array, int64_t offset){
+    
+    int size = 0;
+    while(array[size] != 0 && array[size] != -1){
+        size++;
+    }
+
+    if(array[size] == -1){
+        array[size] = 0;
+        array = realloc(array, (2*(size+1))*sizeof(int64_t));
+        for(int i = size; i < 2*size; i++){
+            array[i] = 0;
+        }
+
+        if(size == 0) array[1] = -1;
+        array[2*size] = -1;
+    }
+    
+    array[size] = offset;
+    //printf("passou\n");
+    return array;
+}
+
 void binarioNaTela(char* nomeArquivoBinario) {
     /*
      * Você não precisa entender o código dessa função.

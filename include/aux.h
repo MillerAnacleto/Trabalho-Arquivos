@@ -101,6 +101,9 @@ char* readQuote12();
 
 int stringnCmp(char* str1, char* str2, int size);
 
+int64_t* offsetArrayCreate();
+int64_t*  offsetArrayInsert(int64_t* array, int64_t offset);
+
 // given function to produce an output based on the header that was written
 void binarioNaTela(char* nomeArquivoBinario);
 
