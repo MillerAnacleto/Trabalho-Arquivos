@@ -364,7 +364,7 @@ char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size
     char equal = 1;
     for(int i = 0; i < array_size; i++){
 
-        int param = (int) indexDataGetOffset(array[i]);
+        int param = indexDataGetParam(array[i]);
         if(param <= 1){
             int cmp = dataGetIntField(bin_data, param);
             if(cmp != indexDataGetIntKey(array[i])){

@@ -254,27 +254,37 @@ char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter
         readFieldStdin(array[j], parameter);
     }
 
-    // teste
-    for(int j = 0; j < parameter_num; j++){
+    // // teste
+    // for(int j = 0; j < parameter_num; j++){
 
-        int64_t cast = indexDataGetOffset(array[j]);
+    //     int64_t cast = indexDataGetOffset(array[j]);
 
-        if(cast <= 1){
-            printf("%ld - %d\n", cast, indexDataGetIntKey(array[j]));
-        }
-        else{
-            printf("%ld - %s\n", cast, indexDataGetStrKey(array[j]));
-        }
+    //     if(cast <= 1){
+    //         printf("%ld - %d\n", cast, indexDataGetIntKey(array[j]));
+    //     }
+    //     else{
+    //         printf("%ld - %s\n", cast, indexDataGetStrKey(array[j]));
+    //     }
         
-    //     readFieldStdin(array[j], parameter);
-    }
+    // //     readFieldStdin(array[j], parameter);
+    // }
     
+    int64_t* arr = NULL;
+
     if(binary_flag){
-        found = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index);
+        arr = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index);
     }
     else{
-        found = linearSearchBinaryFile(binary_file, array, parameter_num);
-    }    
+        arr = linearSearchBinaryFile(binary_file, array, parameter_num, 1);
+    }
+
+    if(arr != NULL && arr[0] != -1){
+        found = 1;
+    }
+    free(arr);
+     
+
+   
 
     for(int kj = 0; kj < parameter_num; kj++){
         indexDataDestroy(array[kj]);
@@ -286,23 +296,32 @@ char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter
     return found;
 }
 
-char linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size){
-    char found = 0;
+int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size, char print){
+    
+    int64_t offset = 0;
     Bin_Header_t* header;
     header = binHeaderRead(file);
+    offset += 17;
     int struct_num = headerGetStructNum(header);
+
+    int64_t* offset_array = offsetArrayCreate();
 
     for(int i = 0; i < struct_num; i++){
         Bin_Data_t* bin_data = dataBinaryRead(file);
+        int var = 32+varStrSize(bin_data);
+        offset += var;
+
         if(dataGetRemoved(bin_data) == '1'){
             dataDestroy(bin_data);
             continue;
         }
 
         if(dataParamCompare(bin_data, array, array_size)){
-            found = 1;
-            dataPrintCsvStyle(bin_data);
-            printf("\n");
+            offset_array = offsetArrayInsert(offset_array, offset);
+            if(print){
+                dataPrintCsvStyle(bin_data);
+                printf("\n");
+            }
         }
 
         dataDestroy(bin_data);
@@ -310,7 +329,7 @@ char linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size){
 
     free(header);
 
-    return found;
+    return offset_array;
 }
 
 int binarySearchIndexInt(Index_Node_t** index, int beg, int end, int field_val){
@@ -353,25 +372,28 @@ int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str){
     else return mid;
 }
 
-char nodeListCompare(Index_Node_t* node, Index_Data_t** array, FILE* binary_file, int parameter_num){
+int64_t* nodeListCompare(Index_Node_t* node, Index_Data_t** array, int64_t* offset_array,
+    FILE* binary_file, int parameter_num, int print){
     
-    char found = 0;
+    
     while(node != NULL){
         int64_t offset = indexDataGetOffset(indexNodeGetData(node));
         fseek(binary_file, offset, SEEK_SET);
         Bin_Data_t* bin_data = dataBinaryRead(binary_file);
-        if( dataParamCompare(bin_data, array, parameter_num) ){
-            dataPrintCsvStyle(bin_data);
-            printf("\n");
-            found = 1;
+        if(dataParamCompare(bin_data, array, parameter_num)){
+            offset_array = offsetArrayInsert(offset_array, offset);
+            if(print){
+                dataPrintCsvStyle(bin_data);
+                printf("\n");
+            }
         }
         dataDestroy(bin_data);
         node = indexNodeGetNext(node);
     }
-    return found;
+    return offset_array;
 }
 
-char binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
     int parameter_num, int parameter_index){
     
     char found = 0;
@@ -382,7 +404,7 @@ char binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** 
     int index_pos = 0;
 
     Index_Node_t** node_array = indexArrayCreate(size);
-    int param = (int) indexDataGetOffset(array[parameter_index]);
+    int param = indexDataGetParam(array[parameter_index]);
     if(param <= 1){
         dataIndexArrayIntRead(index_file, node_array, size, &node_num, &diff_node_num);
         int field_val = indexDataGetIntKey(array[parameter_index]);
@@ -398,15 +420,20 @@ char binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** 
         
         indexArrayDestroy(node_array, size, diff_node_num);
         free(header);
-        return 0;
+        return NULL;
     }
+
     Index_Node_t* n = node_array[index_pos];
-    found = nodeListCompare(n, array, binary_file, parameter_num);
+    int64_t* offset_array = offsetArrayCreate();
+
+    offset_array = nodeListCompare(n, array, offset_array, binary_file, parameter_num, 1);
 
     indexArrayDestroy(node_array, size, diff_node_num);
     free(header);
 
-    if(!found) return 0;
-
-    return 1;
+    if(offset_array == NULL || offset_array[0] == -1){
+        free(offset_array);
+        return NULL;
+    }
+    return offset_array;
 }

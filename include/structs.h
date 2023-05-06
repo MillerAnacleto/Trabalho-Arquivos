@@ -37,6 +37,9 @@ void indexDataSetIntKey(Index_Data_t* data, int key);
 char* indexDataGetStrKey(Index_Data_t* data);
 void indexDataSetStrKey(Index_Data_t* data, char* key);
 
+void indexDataSetParam(Index_Data_t* data, int param);
+int indexDataGetParam(Index_Data_t* data);
+
 void indexHeaderDestroy(Index_Header_t* index_header);
 void indexDataDestroy(Index_Data_t* int_data);
 void stringDataDestroy(Index_Data_t* string_data);

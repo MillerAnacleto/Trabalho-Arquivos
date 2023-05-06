@@ -34,9 +34,9 @@ Index_Node_t** fileIndexRead(char* index_filename, int parameter);
 
 char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
 
-char linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size);
+int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size, char print);
 
-char binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,
+int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
     int parameter_num, int parameter_index);
 
 

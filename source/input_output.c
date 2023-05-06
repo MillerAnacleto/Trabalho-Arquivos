@@ -47,7 +47,7 @@ char* readCsvVarString(FILE* csv_file, int* strlen) {
         checker = fread(&last_read, sizeof(char), 1, csv_file);
         endFileAssert(checker, csv_file);
 
-        str = realloc(str, str_size + 1);
+        str = realloc(str, (str_size + 1)*sizeof(char));
     }
     str[str_size] = '|';
     *strlen = (str_size + 1);
@@ -137,16 +137,16 @@ void printField(char* str, int64_t offset, int key, int parameter){
 
 void readFieldStdin(Index_Data_t* array_elem, int parameter){
     if(parameter <= 1){
-        int param;
-        scanf("%d", &param);
-        indexDataSetIntKey(array_elem, param);
+        int key;
+        scanf("%d", &key);
+        indexDataSetIntKey(array_elem, key);
     }
     else{
         char* str = readQuote12();
         indexDataSetStrKey(array_elem, str);
     }
 
-    int64_t cast = (int64_t) parameter;
-    indexDataSetOffset(array_elem, cast);
-    
+    // int64_t cast = (int64_t) parameter; 
+    // indexDataSetOffset(array_elem, cast);
+    indexDataSetParam(array_elem, parameter);
 }

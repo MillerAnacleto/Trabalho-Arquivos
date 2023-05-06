@@ -7,8 +7,6 @@
 #include <input_output.h>
 #include <structs.h>
 
-
-
 //----------------------- structs para arquivo índicie -----------------------//
 
 struct index_header_{
@@ -17,9 +15,14 @@ struct index_header_{
 };
 
 struct index_data_ {
+
     int int_key;
     char *str_key;
-    int64_t offset;
+
+    union Ints_{
+        int64_t offset;
+        int param;
+    }ints;
 };
 
 char indexHeaderGetStatus(Index_Header_t* header){
@@ -47,11 +50,11 @@ void indexDataSetIntKey(Index_Data_t* data, int key){
 }
 
 int64_t indexDataGetOffset(Index_Data_t* data){
-    return data->offset;
+    return data->ints.offset;
 }
 
 void indexDataSetOffset(Index_Data_t* data, int64_t offset){
-    data->offset = offset;
+    data->ints.offset = offset;
 }
 
 char* indexDataGetStrKey(Index_Data_t* data){
@@ -60,6 +63,14 @@ char* indexDataGetStrKey(Index_Data_t* data){
 
 void indexDataSetStrKey(Index_Data_t* data, char* key){
     data->str_key = key;
+}
+
+void indexDataSetParam(Index_Data_t* data, int param){
+    data->ints.param = param;
+}
+
+int indexDataGetParam(Index_Data_t* data){
+    return data->ints.param; 
 }
 
 Index_Header_t* indexHeaderCreate(){
@@ -72,7 +83,7 @@ Index_Header_t* indexHeaderCreate(){
 Index_Data_t* indexDataCreate(){
     Index_Data_t* data = malloc(sizeof(Index_Data_t));
     data->str_key = NULL;
-    data->offset = EMPTY_INT_FIELD;
+    data->ints.offset = EMPTY_INT_FIELD;
     data->int_key = EMPTY_INT_FIELD;
 
     return data;
