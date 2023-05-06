@@ -61,9 +61,11 @@ void indexNodeSetNext(Index_Node_t* node, Index_Node_t* next);
 
 Index_Node_t* indexNodeStackData(Index_Node_t* node, Index_Node_t* next);
 
+//functions to compare int/string in qsort();
 int indexDataStrCmp(const void *a, const void *b);
 int indexDataIntCmp(const void *a, const void *b);
 
+//não vai precisar usar (tirar talvez)
 void indexArrayTrim(Index_Node_t** array, int node_num);
 
 void indexArrayDestroy(Index_Node_t** array, int size, int non_empty);
