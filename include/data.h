@@ -9,6 +9,9 @@
 #include <input_output.h>
 #include <structs.h>
 
+#define DATA_BASE_SIZE 32
+#define HEADER_SIZE 17
+
 /**
  * @brief reads a csv line and saves it into a data struct
  *
@@ -19,6 +22,7 @@
  * @return Bin_Data_t* returns the filled data struct
  */
 Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array);
+Bin_Data_t* dataRead(int* size_array);
 
 /**
  * @brief reads one registry of the file
@@ -39,7 +43,7 @@ Bin_Data_t* dataBinaryRead(FILE* bin_file);
  *
  * @return int controls the number of writes to verify if all fields were written
  */
-int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array);
+int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array, int64_t offset);
 
 /**
  * @brief Receives a registry and prints its value following the given rules
@@ -48,18 +52,20 @@ int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array);
  */
 void dataPrintCsvStyle(Bin_Data_t* data);
 
-void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter);
+void dataIndexArraySort(Index_Node_t** index_array, int unique_node_num, int parameter);
 
-int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size);
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int unique_node_num);
 
-void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
 
-void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
 
 char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size);
 
 int dataGetIntField(Bin_Data_t* data, int param);
 
 char* dataGetStrField(Bin_Data_t* data, int param);
+
+void dataMarkDeleted(FILE* binary_file, int64_t offset);
 
 #endif // !DATA_H_

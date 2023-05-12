@@ -19,9 +19,7 @@ Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
 
     dataSetId(data, readCsvInt(csv_file));
     
-    char crime_date[DATE_SIZE];
-    readCsvConstString(csv_file, crime_date, DATE_SIZE);
-    dataSetDate(data, crime_date);
+    dataSetDate(data, readCsvConstString(csv_file, DATE_SIZE));
 
     dataSetArticle(data, readCsvInt(csv_file));
 
@@ -29,12 +27,30 @@ Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array) {
     size_array[0] = str_size;
     
     dataSetDescription(data, readCsvVarString(csv_file, &str_size));
-    
     size_array[1] = str_size;
     
-    char cell_brand[BRAND_SIZE];
-    readCsvConstString(csv_file, cell_brand, BRAND_SIZE);
-    dataSetBrand(data, cell_brand);
+    dataSetBrand(data, readCsvConstString(csv_file, BRAND_SIZE));
+    
+    return data;
+}
+
+Bin_Data_t* dataRead(int* size_array) {
+    Bin_Data_t* data = dataCreate();
+    int str_size = 0;
+
+    dataSetId(data, readInt());
+    
+    dataSetDate(data, readConstString(DATE_SIZE));
+
+    dataSetArticle(data, readInt());
+
+    dataSetPlace(data, readVarString(&str_size));
+    size_array[0] = str_size;
+    
+    dataSetDescription(data, readVarString(&str_size));
+    size_array[1] = str_size;
+    
+    dataSetBrand(data, readConstString(BRAND_SIZE));
     
     return data;
 }
@@ -53,7 +69,8 @@ Bin_Data_t* dataBinaryRead(FILE* binary_file) {
     dataSetId(data, id);
     endFileAssert(checker, binary_file);
 
-    char crime_date[DATE_SIZE];
+    // checkar malloc
+    char * crime_date = malloc(sizeof(char) * DATE_SIZE);
     checker = fread(crime_date, (DATE_SIZE) * sizeof(char), 1, binary_file);
     dataSetDate(data, crime_date);
     endFileAssert(checker, binary_file);
@@ -63,7 +80,7 @@ Bin_Data_t* dataBinaryRead(FILE* binary_file) {
     dataSetArticle(data, article);
     endFileAssert(checker, binary_file);
 
-    char brand[BRAND_SIZE];
+    char * brand = malloc(sizeof(char) * BRAND_SIZE);
     checker = fread(brand, (BRAND_SIZE) * sizeof(char), 1, binary_file);
     dataSetBrand(data, brand);
     endFileAssert(checker, binary_file);
@@ -86,7 +103,11 @@ Bin_Data_t* dataBinaryRead(FILE* binary_file) {
     return data;
 }
 
-int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array) {
+// está devolvendo a quantidade de bytes escritos
+int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array, int64_t offset) {
+    if(offset != 0)
+        fseek(binary_file, offset, SEEK_SET);
+
     int acc = 0; // accumulator for write verification
     
     char rmvd = dataGetRemoved(data);
@@ -145,6 +166,12 @@ char* readBinaryVarString(FILE* binary_file) {
 void dataPrintCsvStyle(Bin_Data_t* data) {
     char* aux_str;
 
+    /*
+        TEMPORARIO
+    */
+    int removed = dataGetRemoved(data);
+    printf("%c, ", removed);
+
     printf("%d, ", dataGetId(data));
     
     char* date = dataGetDate(data);
@@ -153,6 +180,7 @@ void dataPrintCsvStyle(Bin_Data_t* data) {
         printf(", ");
     } else
         printf("NULO, ");
+
 
     int article = dataGetArticle(data);
     if (article != -1) {
@@ -183,29 +211,30 @@ void dataPrintCsvStyle(Bin_Data_t* data) {
     }
 }
 
-void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter){
+void dataIndexArraySort(Index_Node_t** index_array, int unique_node_num, int parameter){
 
     if(parameter <= 1){
-        qsort(index_array, size, sizeof(Index_Node_t*), indexDataIntCmp);
+        qsort(index_array, unique_node_num, sizeof(Index_Node_t*), indexDataIntCmp);
         
         return;
     }
 
-    qsort(index_array, size, sizeof(Index_Node_t*), indexDataStrCmp);
+    qsort(index_array, unique_node_num, sizeof(Index_Node_t*), indexDataStrCmp);
 }
 
-int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size){
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int unique_node_num){
+    fseek(index_file, 5, SEEK_SET);
 
     int acc = 0;
     Index_Data_t* data;
 
-    for(int i = 0; i < size; i++){
+    for(int i = 0; i < unique_node_num; i++){
 
         Index_Node_t* next = index_array[i];
 
         while(next != NULL){
 
-            data = indexNodeGetData(index_array[i]);
+            data = indexNodeGetData(next);
             int64_t offset = indexDataGetOffset(data);
             int int_key =  indexDataGetIntKey(data);
             char* char_key = indexDataGetStrKey(data);
@@ -257,7 +286,8 @@ Index_Data_t* indexDataReadStr(FILE* index){
     return data;
 }
 
-void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num){
+    fseek(index, 5, SEEK_SET);
 
     int curr_pos = 0;
     int last_val = 0;
@@ -288,11 +318,11 @@ void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* nod
             curr_pos++;
         }
     }
-    *diff_node_num = curr_pos;
-    *node_num = size;
+    *unique_node_num = curr_pos;
 }
 
-void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num){
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num){
+    fseek(index, 5, SEEK_SET);
 
     int curr_pos = 0;
     char* last_val;
@@ -323,8 +353,7 @@ void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* nod
             curr_pos++;
         }
     }
-    *diff_node_num = curr_pos;
-    *node_num = size;
+    *unique_node_num = curr_pos;
 }
 
 int dataGetIntField(Bin_Data_t* data, int param){
@@ -391,4 +420,15 @@ char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size
     }
 
     return equal;
+}
+
+void dataMarkDeleted(FILE* binary_file, int64_t offset){
+    char deleted_value = '1';
+
+    fseek(binary_file, -offset, SEEK_CUR);
+
+    fwrite(&deleted_value, sizeof(char), 1, binary_file);
+    
+    fseek(binary_file, offset - 1, SEEK_CUR);
+
 }

@@ -66,7 +66,7 @@ int indexDataIntCmp(const void *a, const void *b);
 
 void indexArrayTrim(Index_Node_t** array, int node_num);
 
-void indexArrayDestroy(Index_Node_t** array, int size, int non_empty);
+void indexArrayDestroy(Index_Node_t** array, int size, int unique_node_num);
 
 //----------------------- structs para arquivo binário -----------------------// 
 
@@ -91,6 +91,7 @@ void headerSetRemStructNum(Bin_Header_t* header, int rem_struct_num);
 
 char dataGetRemoved(Bin_Data_t* data);
 void dataSetRemoved(Bin_Data_t* data, char removed);
+char dataIsRemoved(Bin_Data_t* data);
 
 int dataGetId(Bin_Data_t* data);
 void dataSetId(Bin_Data_t* data, int id);

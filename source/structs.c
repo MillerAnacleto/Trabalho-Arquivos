@@ -149,6 +149,7 @@ void indexNodeSetNext(Index_Node_t* node, Index_Node_t* next){
     node->next = next;
 }
 
+// apagar????????
 void indexArrayTrim(Index_Node_t** array, int node_num){
 
     array = realloc(array, node_num*sizeof(Index_Node_t*));
@@ -199,15 +200,15 @@ void freeNodeList(Index_Node_t* node){
     freeNodeList(next);
 }
 
-void indexArrayDestroy(Index_Node_t** array, int size, int non_empty){
+void indexArrayDestroy(Index_Node_t** array, int size, int unique_node_num){
 
-    for(int i = 0;  i < non_empty; i++){
+    for(int i = 0;  i < unique_node_num; i++){
         Index_Node_t* next = indexNodeGetNext(array[i]);
         freeNodeList(next);
         indexDataDestroy(array[i]->data);
         free(array[i]);
     }
-    for(int i = non_empty; i < size; i++){
+    for(int i = unique_node_num; i < size; i++){
         free(array[i]);
     }
 
@@ -226,11 +227,11 @@ struct Header {
 struct Data {
     char removed;
     int32_t crime_id;
-    char crime_date[DATE_SIZE];
+    char* crime_date;
     int32_t article_number;
     char* crime_place;
     char* crime_description;
-    char cellphone_brand[BRAND_SIZE];
+    char* cellphone_brand;
     char delimiter;
 };
 
@@ -244,8 +245,10 @@ Bin_Data_t* dataCreate() {
 
 void dataDestroy(Bin_Data_t* data) {
 
+    free(data->crime_date);
     free(data->crime_description);
     free(data->crime_place);
+    free(data->cellphone_brand);
 
     free(data);
 }
@@ -301,6 +304,10 @@ void dataSetRemoved(Bin_Data_t* data, char removed){
     data->removed = removed;
 }
 
+char dataIsRemoved(Bin_Data_t* data){
+    return data->removed == '1';
+}
+
 int dataGetId(Bin_Data_t* data){
     return data->crime_id;
 }
@@ -314,9 +321,7 @@ char* dataGetDate(Bin_Data_t* data){
 }
 
 void dataSetDate(Bin_Data_t* data, char* date){
-    for(int i = 0; i < DATE_SIZE; i++){
-        data->crime_date[i] = date[i];
-    }
+    data->crime_date = date;
 }
 
 int dataGetArticle(Bin_Data_t* data){
@@ -348,9 +353,7 @@ char* dataGetBrand(Bin_Data_t* data){
 }
 
 void dataSetBrand(Bin_Data_t* data, char* brand){
-    for(int i = 0; i < BRAND_SIZE; i++){
-        data->cellphone_brand[i] = brand[i];
-    }
+    data->cellphone_brand = brand;
 } 
 
 char dataGetDelimiter(Bin_Data_t* data){

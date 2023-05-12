@@ -32,12 +32,19 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
 
 Index_Node_t** fileIndexRead(char* index_filename, int parameter);
 
-char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchDeleteBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchUpdateBinaryFile(char* filename, char* index_file_name, int index_parameter);
 
-int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size, char print);
+int linearSearchBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size, char print);
+int linearDeleteBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size);
 
-int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
     int parameter_num, int parameter_index);
+int binarySearchDeleteIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+    int parameter_num, int parameter_index);
+
+char insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter);
 
 
 

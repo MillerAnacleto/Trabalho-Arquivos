@@ -68,12 +68,31 @@ FILE* csvFileOpen(char* file_name) {
 
 FILE* binaryFileOpenWrite(char* file_name) {
     FILE* binary_file = fopen(file_name, "wb");
-
+    if (binary_file == NULL) {
+        errorFile();
+    }
     return binary_file;
 }
 
 FILE* binaryFileOpenRead(char* file_name) {
     FILE* binary_file = fopen(file_name, "rb");
+    if (binary_file == NULL) {
+        errorFile();
+    }
+    return binary_file;
+}
+
+//apagar
+FILE* binaryFileOpenAppend(char* file_name) {
+    FILE* binary_file = fopen(file_name, "a+b");
+    if (binary_file == NULL) {
+        errorFile();
+    }
+    return binary_file;
+}
+
+FILE* binaryFileOpenReadWrite(char* file_name){
+    FILE* binary_file = fopen(file_name, "r+b");
     if (binary_file == NULL) {
         errorFile();
     }

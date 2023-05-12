@@ -19,7 +19,8 @@
  * @param str string being filled
  * @param strlen length of the string being read
  */
-void readCsvConstString(FILE* csv_file, char* str, int strlen);
+char* readCsvConstString(FILE* csv_file, int strlen);
+char* readConstString(int strlen);
 
 /**
  * @brief reads a variable sized string from a file
@@ -29,6 +30,7 @@ void readCsvConstString(FILE* csv_file, char* str, int strlen);
  * @return char* string that was read
  */
 char* readCsvVarString(FILE* csv_file, int* strlen);
+char* readVarString(int* strlen);
 
 /**
  * @brief reads an integer from the CSV file, it the field is empty
@@ -38,6 +40,7 @@ char* readCsvVarString(FILE* csv_file, int* strlen);
  * @return int integer that was read
  */
 int readCsvInt(FILE* csv_file);
+int readInt();
 
 /**
  * @brief prints a fixed-size string

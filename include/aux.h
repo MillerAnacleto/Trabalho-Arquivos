@@ -50,6 +50,22 @@ FILE* binaryFileOpenWrite(char* file_name);
 FILE* binaryFileOpenRead(char* file_name);
 
 /**
+ * @brief opens a binary file in read and write mode
+ *
+ * @param file_name name of the file that will be read
+ * @return the address to the file
+ */
+FILE* binaryFileOpenReadWrite(char* file_name);
+
+/**
+ * @brief opens a binary file in append mode
+ *
+ * @param file_name name of the file that will be read
+ * @return the address to the file
+ */
+FILE* binaryFileOpenAppend(char* file_name);
+
+/**
  * @brief asserts if the file has ended in case return_value is 0
  *
  * @param return_value value returned from the functions that read files
