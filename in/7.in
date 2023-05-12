@@ -1,4 +1,4 @@
-5 binario7.bin dataCrime string indice7.bin 4
+5 bin/binario7.bin dataCrime string bin/indice7.bin 4
 1 lugarCrime "SAO PAULO"
 1 marcaCelular "SAMSUNG"
 3 idCrime 137 dataCrime "12/01/2018" descricaoCrime "FURTO (ART. 155) - INTERIOR ESTABELECIMENTO"

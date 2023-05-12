@@ -364,3 +364,4 @@ char dataGetDelimiter(Bin_Data_t* data){
 void dataSetDelimiter(Bin_Data_t* data, char delimiter){
     data->delimiter = delimiter;
 } 
+

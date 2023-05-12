@@ -57,6 +57,9 @@ Index_Node_t** fileIndexRead(char* index_filename, int parameter);
  * index file
  * @return 1 if found any match, 0 otherwise 
  */
-char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter, 
+    void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
+
+void removedStructUpdate(char* read_file_name,int found);
 
 #endif // !FILES_H_

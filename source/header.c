@@ -5,7 +5,12 @@
 #include <input_output.h>
 #include <structs.h>
 
-int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header) {
+int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header, int64_t offset){
+
+    if(offset != -1){
+        fseek(binary_file, offset, SEEK_SET);
+    }
+
     int acc = 0;
 
     char status = headerGetStatus(header);
@@ -29,6 +34,11 @@ Bin_Header_t* binHeaderRead(FILE* binary_file){
     
     char status; 
     checker = fread(&status, sizeof(char), 1, binary_file);
+    if(status == '0'){
+        fileClose(binary_file);
+        errorFile();
+    }
+    
     headerSetStatus(header, status);
     endFileAssert(checker, binary_file);
 
@@ -57,8 +67,9 @@ Index_Header_t* indexHeaderRead(FILE* index){
     int checker = fread(&status, sizeof(char), 1, index);
     checker += fread(&struct_num, sizeof(int), 1, index);
     
-    if(status == 0 || checker == 0){
-        return NULL; //não é possível ler o arquivo de indice
+    if(status == '0' || checker == 0){
+        fileClose(index);
+        errorFile(); //não é possível ler o arquivo de indice
     }
 
     Index_Header_t* header = indexHeaderCreate();
@@ -68,8 +79,21 @@ Index_Header_t* indexHeaderRead(FILE* index){
     return header;
 }
 
-int indexHeaderWrite(FILE* binary_file, Index_Header_t* header){
+Index_Header_t* emptyIndexHeaderCreate(){
 
+    Index_Header_t* header = indexHeaderCreate();
+    indexHeaderSetNum(header, 0);
+    indexHeaderSetStatus(header, '0');
+
+    return header;
+
+}
+
+int indexHeaderWrite(FILE* binary_file, Index_Header_t* header, int64_t offset){
+
+    if(offset != -1){
+        fseek(binary_file, offset, SEEK_SET);
+    }
     int acc = 0;
     char status = indexHeaderGetStatus(header);
     int num = indexHeaderGetNum(header); 

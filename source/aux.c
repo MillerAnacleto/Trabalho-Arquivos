@@ -73,7 +73,7 @@ FILE* binaryFileOpenWrite(char* file_name) {
 }
 
 FILE* binaryFileOpenRead(char* file_name) {
-    FILE* binary_file = fopen(file_name, "rb");
+    FILE* binary_file = fopen(file_name, "r+b");
     if (binary_file == NULL) {
         errorFile();
     }
@@ -248,7 +248,7 @@ int64_t*  offsetArrayInsert(int64_t* array, int64_t offset){
     }
     
     array[size] = offset;
-    //printf("passou\n");
+    
     return array;
 }
 

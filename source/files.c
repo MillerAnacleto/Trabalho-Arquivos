@@ -54,7 +54,7 @@ void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
 
     headerSetStatus(header, '0');
 
-    binary_write_checker = binHeaderBinaryWrite(binary_file, header);
+    binary_write_checker = binHeaderBinaryWrite(binary_file, header, -1);
     if (binary_write_checker != 4) {
         fileClose(csv_file);
         fileClose(binary_file);
@@ -93,13 +93,11 @@ void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
     headerSetStructNum(header, i);
     int64_t offset = 17 + accumulator; // offset caused by the header + the variable strings
     offset = ((long long int)(i) * (32)) + offset; // the struct fields summation is 32 bytes
-    headerSetOffset(header, offset);
     
+    headerSetOffset(header, offset);
     headerSetStatus(header, '1');
-    fseek(binary_file, 0, SEEK_SET); // reseting the pointer to the begginig in
-    // order to rewrite the header
 
-    binHeaderBinaryWrite(binary_file, header);
+    binHeaderBinaryWrite(binary_file, header, 0);
     free(header);
 
     fileClose(binary_file);
@@ -111,14 +109,14 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
     FILE* read_file = binaryFileOpenRead(binary_file_name);
 
     Bin_Header_t* header = binHeaderRead(read_file);
+    
+    //reescrevemos o header do arq de dados com status '0'
+    headerSetStatus(header, '0');
+    binHeaderBinaryWrite(read_file, header, 0);
+    
     int size = headerGetStructNum(header);
-    *offset += 17; //offset provocado pelo header
-    //char* str = NULL;
-
-    Index_Header_t* index_header = indexHeaderCreate();
-    indexHeaderSetStatus(index_header, '0');
-    //escrever o header
-
+    *offset += 17; //offset provocado pelo header do arq de dados
+    
     Index_Node_t** index_array = indexArrayCreate(size);
     
     int non_empty = 0;
@@ -140,22 +138,27 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
             free(data);
         }
     }
+
+    //reesecrevemos o header do arq de dados com status '1'
+    headerSetStatus(header, '1');
+    binHeaderBinaryWrite(read_file, header, 0);
     fileClose(read_file);
 
     dataIndexArraySort(index_array, non_empty, parameter);
 
-    //modularizar melhor? Talvez fazer numa função de write?
     FILE* index_file = binaryFileOpenWrite(index_file_name);
-    
-    indexHeaderWrite(index_file, index_header);
-    dataIndexArrayWrite(index_file, index_array, non_empty, parameter);
 
+    //escrevemos o header do arq de indice com status '0'
+    Index_Header_t* index_header = emptyIndexHeaderCreate();
+    indexHeaderWrite(index_file, index_header, -1);
+    
+    dataIndexArrayWrite(index_file, index_array, non_empty, parameter);
     indexArrayDestroy(index_array, size, non_empty);
 
+    //escrevemos o header do arq de indice com status '1' e num de structs setado.'
     indexHeaderSetStatus(index_header, '1');
     indexHeaderSetNum(index_header, non_empty);
-    fseek(index_file,0, SEEK_SET);
-    indexHeaderWrite(index_file, index_header);
+    indexHeaderWrite(index_file, index_header, 0);
     
     free(index_header);
     free(header);
@@ -192,16 +195,17 @@ Index_Node_t** fileIndexRead(char* index_filename, int parameter ){
     return array;
 }
 
-char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter){
+int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter, 
+    void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
 
-    char found = 0;
+    int found = 0;
     FILE* binary_file = binaryFileOpenRead(filename);
     FILE* index_file = binaryFileOpenRead(index_file_name);
     int parameter_num = 0;
     int parameter = 0;
     char binary_flag = 0;
     int parameter_index = 0;
-    
+
     scanf("%d", &parameter_num);
 
     Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
@@ -218,35 +222,13 @@ char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter
         }
         readFieldStdin(array[j], parameter);
     }
-
-    // // teste
-    // for(int j = 0; j < parameter_num; j++){
-
-    //     int64_t cast = indexDataGetOffset(array[j]);
-
-    //     if(cast <= 1){
-    //         printf("%ld - %d\n", cast, indexDataGetIntKey(array[j]));
-    //     }
-    //     else{
-    //         printf("%ld - %s\n", cast, indexDataGetStrKey(array[j]));
-    //     }
-        
-    // //     readFieldStdin(array[j], parameter);
-    // }
     
-    int64_t* offset_array = NULL;
-
     if(binary_flag){
-        offset_array = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index);
+        found = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index, fnt);
     }
     else{
-        offset_array = linearSearchBinaryFile(binary_file, array, parameter_num, 1);
+        found = linearSearchBinaryFile(binary_file, array, parameter_num, fnt);
     }
-
-    if(offset_array != NULL && offset_array[0] != -1){
-        found = 1;
-    }
-    free(offset_array);
     
     for(int kj = 0; kj < parameter_num; kj++){
         indexDataDestroy(array[kj]);
@@ -256,4 +238,17 @@ char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter
     fileClose(index_file);
 
     return found;
+}
+
+void removedStructUpdate(char* read_file_name,int found){
+    //mudar nome da função!
+    FILE* data_file = binaryFileOpenRead(read_file_name);
+    Bin_Header_t* bin_header = binHeaderRead(data_file);
+    found += headerGetRemStructNum(bin_header);
+    headerSetRemStructNum(bin_header, found);
+    binHeaderBinaryWrite(data_file, bin_header, 0);
+
+    free(bin_header);
+    fileClose(data_file);
+
 }

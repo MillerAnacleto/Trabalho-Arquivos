@@ -16,7 +16,7 @@
  * @param header struct from which the filds will be read
  * @return int controls the number of writes to verify if all fields were written
  */
-int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header);
+int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header, int64_t offset);
 
 /**
  * @brief it reads the Header of the binary file
@@ -42,6 +42,10 @@ Index_Header_t* indexHeaderRead(FILE* index);
  * @param header 
  * @return int 
  */
-int indexHeaderWrite(FILE* binary_file, Index_Header_t* header);
+int indexHeaderWrite(FILE* binary_file, Index_Header_t* header, int64_t offset);
+
+Index_Header_t* emptyIndexHeaderCreate();
+
+int indexHeaderReWrite(FILE* file, Index_Header_t* header);
 
 #endif // !HEADER_H_

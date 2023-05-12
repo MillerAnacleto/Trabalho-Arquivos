@@ -85,6 +85,12 @@ Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* 
     Index_Data_t* idx_data = indexDataCreate();
     Bin_Data_t* data = dataBinaryRead(file);
     *offset += 32 + varStrSize(data);
+
+    if(dataGetRemoved(data) == '1'){
+        dataDestroy(data);
+        *exists = 0;
+        return idx_data;
+    }
     int key = EMPTY_INT_FIELD;
     char* str = NULL;
 

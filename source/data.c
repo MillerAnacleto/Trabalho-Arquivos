@@ -361,6 +361,10 @@ char* dataGetStrField(Bin_Data_t* data, int param){
 
 char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** parameter_array, int parameter_num){
 
+    if(dataGetRemoved(bin_data) == '1') return 0; //pode ocorrer caso a deleção
+    //ocorra duas duas vezes num mesmo registro com parâmetros presente em duas
+    //buscas, e que ainda esteja presente no índice.
+    
     char equal = 1;
     for(int i = 0; i < parameter_num; i++){
 
@@ -430,32 +434,49 @@ int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str){
     else return mid;
 }
 
-int64_t* nodeListCompare(Index_Node_t* node, Index_Data_t** array, int64_t* offset_array,
-    FILE* binary_file, int parameter_num, int print){
+int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
+    FILE* binary_file, int parameter_num, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
     
+    Bin_Header_t* bin_header = binHeaderRead(binary_file);
     
+    //reescrevemos o header com status '0'
+    headerSetStatus(bin_header, '0');
+    binHeaderBinaryWrite(binary_file, bin_header, 0);
+
+    int found = 0;
     while(node != NULL){
         int64_t offset = indexDataGetOffset(indexNodeGetData(node));
         fseek(binary_file, offset, SEEK_SET);
         Bin_Data_t* bin_data = dataBinaryRead(binary_file);
         if(dataParamCompare(bin_data, array, parameter_num)){
-            offset_array = offsetArrayInsert(offset_array, offset);
-            if(print){
-                dataPrintCsvStyle(bin_data);
-                printf("\n");
-            }
+            found++;
+            int64_t var = (int64_t)(32+varStrSize(bin_data));
+            (*fnt)(binary_file, var, bin_data);
         }
         dataDestroy(bin_data);
         node = indexNodeGetNext(node);
     }
-    return offset_array;
+
+    //reescrevemos o header com status '1'
+    headerSetStatus(bin_header, '1');
+    binHeaderBinaryWrite(binary_file, bin_header, 0);
+    free(bin_header);
+
+    return found;
 }
 
-int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index){
+int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+    int parameter_num, int parameter_index, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
     
+    int found = 0;
     Index_Header_t* header = indexHeaderRead(index_file);
+
+    //reescrevemos o header com status '0'
+    indexHeaderSetStatus(header, '0');
+    indexHeaderWrite(index_file, header, 0);
+
     int size = indexHeaderGetNum(header);
+
     int node_num = 0;
     int diff_node_num = 0;
     int index_pos = 0;
@@ -476,34 +497,42 @@ int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_
     if(index_pos == -1){
         
         indexArrayDestroy(node_array, size, diff_node_num);
+        indexHeaderSetStatus(header, '1');
+        indexHeaderWrite(index_file, header, 0);
         free(header);
-        return NULL;
+        return 0;
     }
 
     Index_Node_t* n = node_array[index_pos];
-    int64_t* offset_array = offsetArrayCreate();
 
-    offset_array = nodeListCompare(n, array, offset_array, binary_file, parameter_num, 1);
+    found = nodeListCompare(n, array, binary_file, parameter_num, fnt);
 
     indexArrayDestroy(node_array, size, diff_node_num);
+    
+    //reescrevemos o header do arq de indice com status '0'
+    indexHeaderSetStatus(header, '1');
+    indexHeaderWrite(index_file, header, 0);
+    
     free(header);
+    
 
-    if(offset_array == NULL || offset_array[0] == -1){
-        free(offset_array);
-        return NULL;
-    }
-    return offset_array;
+    return found;
 }
 
-int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size, char print){
+int linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size,
+     void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
     
+    int found = 0;
     int64_t offset = 0;
     Bin_Header_t* header;
     header = binHeaderRead(file);
+
+    //reesecrevemos o header com status '0'
+    headerSetStatus(header, '0');
+    binHeaderBinaryWrite(file, header, 0);
+
     offset += 17;
     int struct_num = headerGetStructNum(header);
-
-    int64_t* offset_array = offsetArrayCreate();
 
     for(int i = 0; i < struct_num; i++){
         Bin_Data_t* bin_data = dataBinaryRead(file);
@@ -516,17 +545,34 @@ int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size
         }
 
         if(dataParamCompare(bin_data, array, array_size)){
-            offset_array = offsetArrayInsert(offset_array, offset);
-            if(print){
-                dataPrintCsvStyle(bin_data);
-                printf("\n");
-            }
+            found++;
+            int64_t size = (int64_t) var;
+            (*fnt)(file, size, bin_data);
+            
         }
 
         dataDestroy(bin_data);
     }
 
+    //reescrevemos o header com status '1'
+    headerSetStatus(header, '1');
+    binHeaderBinaryWrite(file, header, 0);
+
     free(header);
 
-    return offset_array;
+    return found;
+}
+
+void ptrBinDataPrint(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data){
+
+    dataPrintCsvStyle(bin_data);
+    printf("\n");
+}
+
+void ptrBinDataDelete(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data){
+
+    fseek(bin_file, -offset, SEEK_CUR);
+    char rmvd = '1';
+    fwrite(&rmvd, sizeof(char), 1, bin_file);
+    fseek(bin_file, offset-1, SEEK_CUR);
 }

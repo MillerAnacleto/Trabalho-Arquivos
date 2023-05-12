@@ -157,8 +157,8 @@ int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str);
  * @param print case 1 prints all matching structs
  * @return returns the offset array
  */
-int64_t* nodeListCompare(Index_Node_t* node, Index_Data_t** array, int64_t* offset_array,
-    FILE* binary_file, int parameter_num, int print);
+int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
+    FILE* binary_file, int parameter_num, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
 
 /**
  * @brief performs a binary search in the index array and returns the offset array
@@ -172,8 +172,8 @@ int64_t* nodeListCompare(Index_Node_t* node, Index_Data_t** array, int64_t* offs
  * @param parameter_index binary parameter index in the parameter array
  * @return offset array
  */
-int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index);
+int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+    int parameter_num, int parameter_index, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
 
 /**
  * @brief performs linear search in a binary file
@@ -184,5 +184,11 @@ int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_
  * @param print if 1 prints any matching structs 
  * @return offset array
  */
-int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size, char print);
+int linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size,
+    void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
+
+
+void ptrBinDataPrint(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data);
+
+void ptrBinDataDelete(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data);
 #endif // !DATA_H_
