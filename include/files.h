@@ -48,15 +48,19 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
  */
 Index_Node_t** fileIndexRead(char* index_filename, int parameter);
 
-/**
- * @brief searches in a binary file (sequential or binary search).
- * 
- * @param filename file to be read and searched
- * @param index_file_name index file (in case of binary search)
- * @param index_parameter parameter that indicates the field that is held by the
- * index file
- * @return 1 if found any match, 0 otherwise 
- */
-char SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchDeleteBinaryFile(char* filename, char* index_file_name, int index_parameter);
+int SearchUpdateBinaryFile(char* filename, char* index_file_name, int index_parameter);
+
+int linearSearchBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size, char print);
+int linearDeleteBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size);
+
+int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+    int parameter_num, int parameter_index);
+int binarySearchDeleteIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+    int parameter_num, int parameter_index);
+
+char insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter);
+
 
 #endif // !FILES_H_

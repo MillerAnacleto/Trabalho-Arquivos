@@ -9,6 +9,9 @@
 #include <input_output.h>
 #include <structs.h>
 
+#define DATA_BASE_SIZE 32
+#define HEADER_SIZE 17
+
 /**
  * @brief reads a csv line and saves it into a data struct
  *
@@ -19,6 +22,7 @@
  * @return Bin_Data_t* returns the filled data struct
  */
 Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array);
+Bin_Data_t* dataRead(int* size_array);
 
 /**
  * @brief reads one registry of the file
@@ -39,7 +43,7 @@ Bin_Data_t* dataBinaryRead(FILE* bin_file);
  *
  * @return int controls the number of writes to verify if all fields were written
  */
-int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array);
+int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array, int64_t offset);
 
 /**
  * @brief Receives a registry and prints its value following the given rules
@@ -48,48 +52,13 @@ int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array);
  */
 void dataPrintCsvStyle(Bin_Data_t* data);
 
-/**
- * @brief sorts an index array based on key and offset
- * 
- * @param index_array array to be sorted
- * @param size size of the array
- * @param parameter defines if the comparions will be between int or string
- */
-void dataIndexArraySort(Index_Node_t** index_array, int size, int parameter);
+void dataIndexArraySort(Index_Node_t** index_array, int unique_node_num, int parameter);
 
-/**
- * @brief writes an index array in a binary index file
- * 
- * @param index_file index file
- * @param index_array array to be written (index)
- * @param size size of the array
- * @param parameter defines if int or string will be written
- * @return the number of itens successfully written
- */
-int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int size, int parameter);
+int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int unique_node_num);
 
-/**
- * @brief reads an index integer index array from a file 
- * 
- * @param index index file to be read
- * @param array array to recieve the index information
- * @param size number of structs to be read in the index file
- * @param node_num number of different keys read 
- * @param diff_node_num number of valid keys read (non-empty)
- */
-void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
 
-/**
- * @brief reads an index string index array from a file 
- * 
- * @param index index file to be read
- * @param array array to recieve the index information
- * @param size number of structs to be read in the index file
- * @param node_num number of different keys read 
- * @param diff_node_num number of valid keys read (non-empty)
- * 
-*/
-void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* node_num, int* diff_node_num);
+void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
 
 /**
  * @brief compares a binary data struct with all search parameters given
@@ -121,68 +90,6 @@ int dataGetIntField(Bin_Data_t* data, int param);
  */
 char* dataGetStrField(Bin_Data_t* data, int param);
 
-/**
- * @brief search an index int array using binary search
- * 
- * @param index index array 
- * @param beg beggining of current binary search
- * @param end end of current binary search
- * @param field_val value being searched
- * @return position of the searched item if found, -1 otherwise 
- */
-int binarySearchIndexInt(Index_Node_t** index, int beg, int end, int field_val);
+void dataMarkDeleted(FILE* binary_file, int64_t offset);
 
-/**
- * @brief search an string int array using binary search
- * 
- * @param index index array 
- * @param beg beggining of current binary search
- * @param end end of current binary search
- * @param field_val value being searched
- * @return position of the searched item if found, -1 otherwise 
- */
-int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str);
-
-/**
- * @brief compares a list of index nodes to check if the other fields match all the 
- * search parameters (the list contains all keys collide with the indexation)
- * 
- * @param node first node in the list
- * @param array parameter array, contains all the search parameter fields
- * @param offset_array offset array that will be filled and returned, with all
- * the matching binary structs locations.
- * @param binary_file file being read to compare all the other parameters not 
- * contained in the index file
- * @param parameter_num number of parameters being compared
- * @param print case 1 prints all matching structs
- * @return returns the offset array
- */
-int64_t* nodeListCompare(Index_Node_t* node, Index_Data_t** array, int64_t* offset_array,
-    FILE* binary_file, int parameter_num, int print);
-
-/**
- * @brief performs a binary search in the index array and returns the offset array
- * containing the position of all matching structs in the binary file
- * 
- * @param index_file 
- * @param binary_file file being read (to compare all other search parameters 
- * that are not in the index file) 
- * @param array parameter array to hold an int or string
- * @param parameter_num number of search parameters
- * @param parameter_index binary parameter index in the parameter array
- * @return offset array
- */
-int64_t* binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index);
-
-/**
- * @brief performs linear search in a binary file
- * 
- * @param file file in which the search occurs
- * @param array parameter array
- * @param array_size number of parameters
- * @param print if 1 prints any matching structs 
- * @return offset array
- */
-int64_t* linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size, char print);
 #endif // !DATA_H_

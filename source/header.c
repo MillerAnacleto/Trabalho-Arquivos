@@ -6,6 +6,9 @@
 #include <structs.h>
 
 int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header) {
+    //precisa?
+    fseek(binary_file, 0, SEEK_SET);
+
     int acc = 0;
 
     char status = headerGetStatus(header);
@@ -69,6 +72,8 @@ Index_Header_t* indexHeaderRead(FILE* index){
 }
 
 int indexHeaderWrite(FILE* binary_file, Index_Header_t* header){
+    //precisa?
+    fseek(binary_file, 0, SEEK_SET);
 
     int acc = 0;
     char status = indexHeaderGetStatus(header);

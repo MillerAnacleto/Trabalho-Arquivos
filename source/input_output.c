@@ -11,7 +11,9 @@
 #define BRAND_SIZE 12
 #define DATE_SIZE 10
 
-void readCsvConstString(FILE* csv_file, char* str, int str_len) {
+// char * ?
+char* readCsvConstString(FILE* csv_file, int strlen) {
+    char* str = malloc(sizeof(char) * strlen);
     char last_read = '\0';
     int str_size = -1; // value initialized at -1 to simplify the loop
 
@@ -26,9 +28,41 @@ void readCsvConstString(FILE* csv_file, char* str, int str_len) {
         // error mesage is displayed
     }
 
-    for (int i = str_size + 1; i < str_len; i++) {
+    for (int i = str_size + 1; i < strlen; i++) {
         str[i] = '$';
     }
+    return str;
+}
+
+char* readConstString(int strlen) {
+    char* str = malloc(sizeof(char) * strlen);
+    char last_read = '\0';
+    int str_size = 0; // value initialized at -1 to simplify the loop
+
+    scanf("%c", &last_read); // if the field is empty the while-loop is skipped
+    while(last_read == ' ' || last_read == '\n'){
+        scanf("%c", &last_read);
+    }
+
+    if(last_read == '"'){
+        while (last_read != '"' || str_size == 0) {
+            if(last_read != '"'){
+                str[str_size] = last_read;
+                str_size++;
+            }
+            scanf("%c", &last_read);
+        }
+    }
+    else{
+        while (last_read != 'O') {
+            scanf("%c", &last_read);
+        }
+    }
+    for (int i = str_size; i < strlen; i++) {
+        str[i] = '$';
+    }
+
+    return str;
 }
 
 char* readCsvVarString(FILE* csv_file, int* strlen) {
@@ -55,7 +89,49 @@ char* readCsvVarString(FILE* csv_file, int* strlen) {
     return str;
 }
 
-int32_t readCsvInt(FILE* csv_file) {
+char* readVarString(int* strlen) {
+    char* str = malloc(sizeof(char));
+    char last_read = '\0';
+    int str_size = 0; // unlike the other loop, the final value of the string
+    // has size 1 + original string, because the '|' character must be added, therefore it must
+    // be initialized in 0
+
+    scanf("%c", &last_read); // if the field is empty the while-loop is skipped
+    while(last_read == ' ' || last_read == '\n'){
+        scanf("%c", &last_read);
+    }
+
+    if(last_read == '"'){
+        while (last_read != '"' || str_size == 0) {
+            if(last_read != '"'){
+                str[str_size] = last_read;
+                str_size++;
+            }
+            scanf("%c", &last_read);
+
+            str = realloc(str, (str_size + 1)*sizeof(char));
+            if(str_size > 50)
+                exit(0);
+
+            // (last != ' ' && last != '\n') || str[str_size] != '"'
+        }
+        str[str_size] = '\0';
+    }
+    else if(last_read == 'N'){
+        while (last_read != ' ' && last_read != '\n') {
+            scanf("%c", &last_read);
+        }
+
+        
+    }
+
+    str[str_size] = '|';
+    *strlen = (str_size + 1);
+
+    return str;
+}
+
+int readCsvInt(FILE* csv_file) {
     // the reading occurs byte by byte, to avoid problems with empty fields
     int integer = 0;
     char last_read[11]; // 10 digits is the maximum number a 32 bit integer can
@@ -72,6 +148,34 @@ int32_t readCsvInt(FILE* csv_file) {
         endFileAssert(checker, csv_file);
     }
     if (str_size == 0) {
+        integer = -1;
+    } else {
+        integer = atoi(last_read);
+    }
+
+    return integer;
+}
+
+int readInt() {
+    // the reading occurs byte by byte, to avoid problems with empty fields
+    int integer = 0;
+    char last_read[11]; // 10 digits is the maximum number a 32 bit integer can
+    // have,another byte is added for the comma.
+
+    int str_size = 0;
+
+    scanf("%c", &last_read[0]);
+
+    while(last_read[0] == ' ' || last_read[0] == '\n'){
+        scanf("%c", &last_read[0]);
+    }
+
+    while (last_read[str_size] != ' ' && last_read[str_size] != '\n') {
+        str_size++;
+        scanf("%c", &last_read[str_size]);
+    }
+    
+    if (last_read[0] > '9') {
         integer = -1;
     } else {
         integer = atoi(last_read);
@@ -100,9 +204,13 @@ Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* 
         }
     }
 
-    dataDestroy(data);
+    indexDataSetIntKey(idx_data, key);
+    indexDataSetStrKey(idx_data, str);
     
-    if(str != NULL || (key != EMPTY_INT_FIELD )) *exists = 1;
+    // modificar
+    if((str != NULL || (key != EMPTY_INT_FIELD )) && !dataIsRemoved(data)) *exists = 1;
+    
+    dataDestroy(data);
     return idx_data;
 }
 
