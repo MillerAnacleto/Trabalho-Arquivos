@@ -236,14 +236,18 @@ int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int unique
 
             data = indexNodeGetData(next);
             int64_t offset = indexDataGetOffset(data);
-            int int_key =  indexDataGetIntKey(data);
-            char* char_key = indexDataGetStrKey(data);
 
-            if(int_key != EMPTY_INT_FIELD){
-                acc += fwrite(&int_key, sizeof(int), 1, index_file);
+            if(parameter <= 1){
+                int int_key =  indexDataGetIntKey(data);
+                if(int_key != -1){
+                    acc += fwrite(&int_key, sizeof(int), 1, index_file);
+                }
             }
-            else if(char_key != NULL){
-                acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
+            else{
+                char* char_key = indexDataGetStrKey(data);
+                if(char_key != NULL){
+                    acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
+                }
             }
             acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
             next = indexNodeGetNext(next);
@@ -257,29 +261,25 @@ Index_Data_t* indexDataReadInt(FILE* index){
     Index_Data_t* data = indexDataCreate();
     int key = EMPTY_INT_FIELD;
     int64_t offset = -1;
-    char* str = NULL;
-    //int checker;
 
     fread(&key, sizeof(int), 1, index);
     fread(&offset, sizeof(int64_t), 1, index);
 
     indexDataSetIntKey(data, key);
     indexDataSetOffset(data, offset);
-    indexDataSetStrKey(data, str);
+    
 
     return data;
 }
 
 Index_Data_t* indexDataReadStr(FILE* index){
     Index_Data_t* data = indexDataCreate();
-    int key = EMPTY_INT_FIELD;
     int64_t offset = -1;
-    char* str = malloc(12*sizeof(char));
+    char str[12];
 
     fread(str, sizeof(char), 12, index);
     fread(&offset, sizeof(int64_t), 1, index);
 
-    indexDataSetIntKey(data, key);
     indexDataSetOffset(data, offset);
     indexDataSetStrKey(data, str);
 
@@ -388,23 +388,21 @@ char* dataGetStrField(Bin_Data_t* data, int param){
     return str;
 }
 
-char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size){
+char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** parameter_array, int parameter_num){
 
     char equal = 1;
-    for(int i = 0; i < array_size; i++){
+    for(int i = 0; i < parameter_num; i++){
 
-        int param = indexDataGetParam(array[i]);
+        int param = indexDataGetParam(parameter_array[i]);
         if(param <= 1){
             int cmp = dataGetIntField(bin_data, param);
-            if(cmp != indexDataGetIntKey(array[i])){
+            if(cmp != indexDataGetIntKey(parameter_array[i])){
                 return 0;
             }
         }
-
         else{
-
             char* str1 = dataGetStrField(bin_data, param);
-            char* str2 = indexDataGetStrKey(array[i]);
+            char* str2 = indexDataGetStrKey(parameter_array[i]);
     
             if(str1 == NULL) return 0;
             
@@ -414,7 +412,6 @@ char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size
                     return 0;
                 }
             }
-
             free(str1);
         }
     }

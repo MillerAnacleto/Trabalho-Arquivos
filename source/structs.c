@@ -14,10 +14,12 @@ struct index_header_{
     int struct_num;
 };
 
-struct index_data_ {
+struct index_data_{
 
-    int int_key;
-    char *str_key;
+    union Keys_{
+        int int_key;
+        char str_key[STR_SIZE];
+    }keys;
 
     union Ints_{
         int64_t offset;
@@ -42,11 +44,11 @@ void indexHeaderSetNum(Index_Header_t* header, int num){
 }
 
 int indexDataGetIntKey(Index_Data_t* data){
-    return data->int_key;
+    return data->keys.int_key;
 }
 
 void indexDataSetIntKey(Index_Data_t* data, int key){
-    data->int_key = key;
+    data->keys.int_key = key;
 }
 
 int64_t indexDataGetOffset(Index_Data_t* data){
@@ -58,11 +60,13 @@ void indexDataSetOffset(Index_Data_t* data, int64_t offset){
 }
 
 char* indexDataGetStrKey(Index_Data_t* data){
-    return data->str_key;
+    return data->keys.str_key;
 }
 
 void indexDataSetStrKey(Index_Data_t* data, char* key){
-    data->str_key = key;
+    for(int i = 0; i < STR_SIZE; i++){
+        data->keys.str_key[i] = key[i];
+    }
 }
 
 void indexDataSetParam(Index_Data_t* data, int param){
@@ -82,9 +86,9 @@ Index_Header_t* indexHeaderCreate(){
 
 Index_Data_t* indexDataCreate(){
     Index_Data_t* data = malloc(sizeof(Index_Data_t));
-    data->str_key = NULL;
+    data->keys.str_key[0] = '\0';
     data->ints.offset = EMPTY_INT_FIELD;
-    data->int_key = EMPTY_INT_FIELD;
+    data->keys.int_key = EMPTY_INT_FIELD;
 
     return data;
 }
@@ -95,7 +99,7 @@ void indexHeaderDestroy(Index_Header_t* index_header){
 
 void indexDataDestroy(Index_Data_t* data){
 
-    if(data->str_key != NULL) free(data->str_key);
+    //if(data->keys.str_key != NULL) free(data->keys.str_key);
     free(data);
 }
 
@@ -163,8 +167,8 @@ int indexDataStrCmp(const void *a, const void *b){
     Index_Node_t* elem1 = *elem1_ptr;
     Index_Node_t* elem2 = *elem2_ptr;
 
-    char* str1 = elem1->data->str_key;
-    char* str2 = elem2->data->str_key;
+    char* str1 = elem1->data->keys.str_key;
+    char* str2 = elem2->data->keys.str_key;
     
     for(int i = 0; i < STR_SIZE; i++){
         int j = str1[i] - str2[i];
@@ -182,8 +186,8 @@ int indexDataIntCmp(const void *a, const void *b){
     Index_Node_t* elem1 = *elem1_ptr;
     Index_Node_t* elem2 = *elem2_ptr;
 
-    int int1 = elem1->data->int_key;
-    int int2 = elem2->data->int_key;
+    int int1 = elem1->data->keys.int_key;
+    int int2 = elem2->data->keys.int_key;
     
     int j = int1 - int2;
     if(j != 0) return j;

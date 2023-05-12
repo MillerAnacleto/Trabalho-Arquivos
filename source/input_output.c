@@ -194,9 +194,14 @@ Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* 
 
     if(parameter <= 1){
         key = dataGetIntField(data, parameter);
+        indexDataSetIntKey(idx_data, key);
     }
     else{
         str = dataGetStrField(data, parameter);
+        if(str != NULL){
+            indexDataSetStrKey(idx_data, str);
+            free(str);
+        }
     }
 
     indexDataSetIntKey(idx_data, key);
@@ -208,7 +213,6 @@ Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* 
     dataDestroy(data);
     return idx_data;
 }
-
 
 void printField(char* str, int64_t offset, int key, int parameter){
 
@@ -250,6 +254,7 @@ void readFieldStdin(Index_Data_t* array_elem, int parameter){
     else{
         char* str = readQuote12();
         indexDataSetStrKey(array_elem, str);
+        free(str);
     }
 
     // int64_t cast = (int64_t) parameter; 

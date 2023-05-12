@@ -28,8 +28,24 @@ void fileBinaryPrintAsCsv(char* file_name);
  */
 void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name);
 
+/**
+ * @brief creates an index file
+ * 
+ * @param binary_file_name binary file from which the index file is created
+ * @param index_file_name name of the index file that will be created
+ * @param parameter search parameter tha will be indexed in the index file
+ * @param offset long int that holds the number of bytes for each valid struct read
+ */
 void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset);
 
+/**
+ * @brief reads an index file and creates a linked list array to handle collisions.
+ * Each equal key is placed in a linked list above the previous key of that type.
+ * 
+ * @param index_filename name of index file to be opened 
+ * @param parameter diferentiates the read of int to string
+ * @return returns the index node array
+ */
 Index_Node_t** fileIndexRead(char* index_filename, int parameter);
 
 int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
@@ -45,7 +61,6 @@ int binarySearchDeleteIndexArray(FILE* index_file, FILE* binary_file, Index_Data
     int parameter_num, int parameter_index);
 
 char insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter);
-
 
 
 #endif // !FILES_H_

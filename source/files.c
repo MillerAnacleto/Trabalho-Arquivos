@@ -108,41 +108,6 @@ void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
     binarioNaTela(binary_file_name);
 }
 
-int indexArrayPrint(Index_Node_t** index_array, int size){
-
-    int acc = 0;
-    Index_Data_t* data;
-
-    for(int i = 0; i < size; i++){
-
-        Index_Node_t* next = index_array[i];
-
-        while(next != NULL){
-            
-            printf("i = %d\n", i);
-            data = indexNodeGetData(next);
-            int64_t offset = indexDataGetOffset(data);
-            int int_key =  indexDataGetIntKey(data);
-            char* char_key = indexDataGetStrKey(data);
-
-            if(int_key != EMPTY_INT_FIELD){
-                printf("%d ", int_key);
-                //acc += fwrite(&int_key, sizeof(int), 1, index_file);
-            }
-            else if(char_key != NULL){
-                printf("%c%c%c%c ", char_key[0], char_key[1], char_key[2], char_key[3]);
-                //acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
-            }
-            printf("%ld\n", offset);
-            //acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
-
-            next = indexNodeGetNext(next);
-        }
-    }
-
-    return acc;
-}
-
 void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset){
 
     FILE* read_file = binaryFileOpenRead(binary_file_name);
@@ -167,7 +132,6 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
         int64_t offset_temp = *offset;
         char exists = 0;
         data = readBinaryField(read_file, parameter, offset, &exists);
-        indexDataSetOffset(data, offset_temp);
         
         if(exists){
             indexNodeSetData(index_array, unique_node_num, data);
@@ -185,6 +149,7 @@ void fileIndexCreate(char* binary_file_name, char* index_file_name, int paramete
     FILE* index_file = binaryFileOpenWrite(index_file_name);
     
     indexHeaderWrite(index_file, index_header);
+  
     dataIndexArrayWrite(index_file, index_array, unique_node_num);
 
     indexArrayDestroy(index_array, size, unique_node_num);
@@ -433,7 +398,7 @@ int SearchDeleteBinaryFile(char* filename, char* index_file_name, int index_para
     else{
         found = linearDeleteBinaryFile(binary_file, header, array, parameter_num);
     }
-
+    
     for(int kj = 0; kj < parameter_num; kj++){
         indexDataDestroy(array[kj]);
     }

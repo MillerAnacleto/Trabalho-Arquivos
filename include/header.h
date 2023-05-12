@@ -27,8 +27,21 @@ int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header);
  */
 Bin_Header_t* binHeaderRead(FILE* binary_file);
 
+/**
+ * @brief reads the index header
+ * 
+ * @param index 
+ * @return Index_Header_t* 
+ */
 Index_Header_t* indexHeaderRead(FILE* index);
 
+/**
+ * @brief writes index header
+ * 
+ * @param binary_file 
+ * @param header 
+ * @return int 
+ */
 int indexHeaderWrite(FILE* binary_file, Index_Header_t* header);
 
 #endif // !HEADER_H_

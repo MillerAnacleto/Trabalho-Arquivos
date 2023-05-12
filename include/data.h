@@ -60,10 +60,34 @@ void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* uni
 
 void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
 
-char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size);
+/**
+ * @brief compares a binary data struct with all search parameters given
+ * 
+ * @param bin_data binary data candidate to be the search answer
+ * @param parameter_array holds each field of the search parameters
+ * @param parameter_num number of search parameters given
+ * @return 1 case the binary data has all search parameters, 0 otherwise 
+ */
+char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** parameter_array, int parameter_num);
 
+/**
+ * @brief returns the int field specified by parameter, id case param == 0
+ * or article number, case param == 1 
+ * 
+ * @param data binary data from wich the field is returned
+ * @param param specifier to determine which field is returned
+ * @return id (param == 0) or article number (param == 1)
+ */
 int dataGetIntField(Bin_Data_t* data, int param);
 
+/**
+ * @brief returns the string field specified by parameter, date case param == 2
+ * description case param == 3, place case param == 4, brand case param == 5.
+ * 
+ * @param data binary data from wich the field is returned
+ * @param param  specifier to determine which field is returned
+ * @return  
+ */
 char* dataGetStrField(Bin_Data_t* data, int param);
 
 void dataMarkDeleted(FILE* binary_file, int64_t offset);
