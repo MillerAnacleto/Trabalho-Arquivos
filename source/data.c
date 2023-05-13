@@ -359,27 +359,27 @@ char* dataGetStrField(Bin_Data_t* data, int param){
     return str;
 }
 
-char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** parameter_array, int parameter_num){
+char dataParamCompare(Bin_Data_t* bin_data, Parameter_Hold_t** parameter_array, int parameter_num){
 
     if(dataGetRemoved(bin_data) == '1') return 0; //pode ocorrer caso a deleção
     //ocorra duas duas vezes num mesmo registro com parâmetros presente em duas
     //buscas, e que ainda esteja presente no índice.
-    
+
     char equal = 1;
     for(int i = 0; i < parameter_num; i++){
 
-        int param = indexDataGetParam(parameter_array[i]);
+        int param = paramHoldGetVal(parameter_array[i]);
         if(param <= 1){
             int cmp = dataGetIntField(bin_data, param);
-            if(cmp != indexDataGetIntKey(parameter_array[i])){
+            if(cmp != paramHoldGetIntKey(parameter_array[i])){
                 return 0;
             }
         }
         else{
             char* str1 = dataGetStrField(bin_data, param);
-            char* str2 = indexDataGetStrKey(parameter_array[i]);
+            char* str2 = paramHoldGetStrKey(parameter_array[i]);
     
-            if(str1 == NULL) return 0;
+            if(str1 == NULL || str2 == NULL) return 0;
             
             for(int j = 0; j < STR_SIZE; j++){
                 if(str1[j] != str2[j]){
@@ -434,7 +434,7 @@ int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str){
     else return mid;
 }
 
-int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
+int nodeListCompare(Index_Node_t* node, Parameter_Hold_t** array,
     FILE* binary_file, int parameter_num, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
     
     Bin_Header_t* bin_header = binHeaderRead(binary_file);
@@ -465,7 +465,7 @@ int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
     return found;
 }
 
-int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Parameter_Hold_t** array,  
     int parameter_num, int parameter_index, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
     
     int found = 0;
@@ -482,15 +482,17 @@ int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** a
     int index_pos = 0;
 
     Index_Node_t** node_array = indexArrayCreate(size);
-    int param = indexDataGetParam(array[parameter_index]);
+    //int param = indexDataGetParam(array[parameter_index]);
+    int param = paramHoldGetVal(array[parameter_index]);
+    
     if(param <= 1){
         dataIndexArrayIntRead(index_file, node_array, size, &node_num, &diff_node_num);
-        int field_val = indexDataGetIntKey(array[parameter_index]);
+        int field_val = paramHoldGetIntKey(array[parameter_index]);
         index_pos = binarySearchIndexInt(node_array, 0, diff_node_num, field_val);
     }
     else{
         dataIndexArrayStrRead(index_file, node_array, size, &node_num, &diff_node_num);
-        char* str = indexDataGetStrKey(array[parameter_index]);
+        char* str = paramHoldGetStrKey(array[parameter_index]);
         index_pos = binarySearchIndexStr(node_array, 0, diff_node_num, str);
     }
 
@@ -519,7 +521,7 @@ int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** a
     return found;
 }
 
-int linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size,
+int linearSearchBinaryFile(FILE* file, Parameter_Hold_t** array, int array_size,
      void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data)){
     
     int found = 0;
@@ -575,4 +577,27 @@ void ptrBinDataDelete(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data){
     char rmvd = '1';
     fwrite(&rmvd, sizeof(char), 1, bin_file);
     fseek(bin_file, offset-1, SEEK_CUR);
+}
+
+void ptrUpdateField(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data){
+
+    int substitution_num = 0;
+    scanf("%d", &substitution_num);
+    printf("substituition num = %d\n", substitution_num);
+
+    Parameter_Hold_t** param_array = parameterArrayCreate(substitution_num);
+
+    int parameter = 0;
+    for(int i = 0; i < substitution_num; i++){
+        parameter = searchParameter();
+        readFieldStdin(param_array[i], parameter, 0);
+    }
+    
+    printf("O registro:");
+    dataPrintCsvStyle(bin_data);
+    printf("\n");
+    printf("deve ter os campos substituídos por: ");
+    paramArrPrint(param_array, substitution_num);
+    printf("\n");
+
 }

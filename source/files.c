@@ -206,12 +206,11 @@ int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter,
     char binary_flag = 0;
     int parameter_index = 0;
 
+    //modularizar a construção do array de parametros para poder passar como argumento!!
+
     scanf("%d", &parameter_num);
 
-    Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
-    for(int kj = 0; kj < parameter_num; kj++){
-        array[kj] = indexDataCreate();
-    }
+    Parameter_Hold_t** array = parameterArrayCreate(parameter_num);
 
     for(int j = 0; j < parameter_num; j++){
         
@@ -220,8 +219,12 @@ int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter,
             binary_flag = 1;
             parameter_index = j;
         }
-        readFieldStdin(array[j], parameter);
+        readFieldStdin(array[j], parameter, STR_SIZE);
     }
+
+    printf("Busca por: ");
+    paramArrPrint(array, parameter_num);
+    printf("\n");
     
     if(binary_flag){
         found = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index, fnt);
@@ -230,9 +233,7 @@ int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter,
         found = linearSearchBinaryFile(binary_file, array, parameter_num, fnt);
     }
     
-    for(int kj = 0; kj < parameter_num; kj++){
-        indexDataDestroy(array[kj]);
-    }
+    parameterArrayDestroy(array, parameter_num);
     free(array);
     fileClose(binary_file);
     fileClose(index_file);

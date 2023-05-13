@@ -99,7 +99,7 @@ void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* nod
  * @param parameter_num number of search parameters given
  * @return 1 case the binary data has all search parameters, 0 otherwise 
  */
-char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** parameter_array, int parameter_num);
+char dataParamCompare(Bin_Data_t* bin_data, Parameter_Hold_t** parameter_array, int parameter_num);
 
 /**
  * @brief returns the int field specified by parameter, id case param == 0
@@ -157,7 +157,7 @@ int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str);
  * @param print case 1 prints all matching structs
  * @return returns the offset array
  */
-int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
+int nodeListCompare(Index_Node_t* node, Parameter_Hold_t** array,
     FILE* binary_file, int parameter_num, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
 
 /**
@@ -172,7 +172,7 @@ int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
  * @param parameter_index binary parameter index in the parameter array
  * @return offset array
  */
-int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
+int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Parameter_Hold_t** array,  
     int parameter_num, int parameter_index, void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
 
 /**
@@ -184,11 +184,14 @@ int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** a
  * @param print if 1 prints any matching structs 
  * @return offset array
  */
-int linearSearchBinaryFile(FILE* file, Index_Data_t** array, int array_size,
+int linearSearchBinaryFile(FILE* file, Parameter_Hold_t** array, int array_size,
     void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data));
 
 
 void ptrBinDataPrint(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data);
 
 void ptrBinDataDelete(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data);
+
+void ptrUpdateField(FILE* bin_file, int64_t offset, Bin_Data_t* bin_data);
+
 #endif // !DATA_H_

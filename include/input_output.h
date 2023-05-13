@@ -75,6 +75,6 @@ void printField(char* str, int64_t offset, int key, int parameter);
  * @param array_elem index data that will hold the field
  * @param parameter  parameter to differntiate string from int
  */
-void readFieldStdin(Index_Data_t* array_elem, int parameter);
+void readFieldStdin(Parameter_Hold_t* array_elem, int parameter, int size);
 
 #endif // !INPUT_OUTPUT_H_

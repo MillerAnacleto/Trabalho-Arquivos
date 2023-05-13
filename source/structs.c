@@ -21,10 +21,8 @@ struct index_data_{
         char str_key[STR_SIZE];
     }keys;
 
-    union Ints_{
-        int64_t offset;
-        int param;
-    }ints;
+    int64_t offset;
+    
 };
 
 char indexHeaderGetStatus(Index_Header_t* header){
@@ -52,11 +50,11 @@ void indexDataSetIntKey(Index_Data_t* data, int key){
 }
 
 int64_t indexDataGetOffset(Index_Data_t* data){
-    return data->ints.offset;
+    return data->offset;
 }
 
 void indexDataSetOffset(Index_Data_t* data, int64_t offset){
-    data->ints.offset = offset;
+    data->offset = offset;
 }
 
 char* indexDataGetStrKey(Index_Data_t* data){
@@ -69,14 +67,6 @@ void indexDataSetStrKey(Index_Data_t* data, char* key){
     }
 }
 
-void indexDataSetParam(Index_Data_t* data, int param){
-    data->ints.param = param;
-}
-
-int indexDataGetParam(Index_Data_t* data){
-    return data->ints.param; 
-}
-
 Index_Header_t* indexHeaderCreate(){
     Index_Header_t* header_indx = malloc(sizeof(Index_Header_t));
     header_indx->status = 1;
@@ -87,7 +77,7 @@ Index_Header_t* indexHeaderCreate(){
 Index_Data_t* indexDataCreate(){
     Index_Data_t* data = malloc(sizeof(Index_Data_t));
     data->keys.str_key[0] = '\0';
-    data->ints.offset = EMPTY_INT_FIELD;
+    data->offset = EMPTY_INT_FIELD;
     data->keys.int_key = EMPTY_INT_FIELD;
 
     return data;
@@ -101,6 +91,85 @@ void indexDataDestroy(Index_Data_t* data){
 
     //if(data->keys.str_key != NULL) free(data->keys.str_key);
     free(data);
+}
+
+//---------------- estruturas para parâmetros de busca -----------------------//
+struct parameter_hold{
+
+    int int_key;
+    char* str_key;
+    int param_val;
+};
+
+Parameter_Hold_t* parameterHoldCreate(){
+
+    Parameter_Hold_t* param = malloc(sizeof(Parameter_Hold_t));
+    param->int_key = EMPTY_INT_FIELD;
+    param->param_val = EMPTY_INT_FIELD;
+    param->str_key = NULL;
+
+    return param;
+};
+
+Parameter_Hold_t** parameterArrayCreate(int parameter_num){
+
+    parameter_num++;
+    Parameter_Hold_t** arr = malloc(parameter_num*sizeof(Parameter_Hold_t*));
+
+    for(int i = 0; i < parameter_num; i++){
+        arr[i] = parameterHoldCreate();
+    }
+
+    arr[parameter_num-1]->int_key = EMPTY_INT_FIELD;
+    arr[parameter_num-1]->param_val = EMPTY_INT_FIELD;
+    arr[parameter_num-1]->str_key = NULL;
+
+    return arr; 
+}
+
+void parameterArrayDestroy(Parameter_Hold_t** array, int size){
+    for(int i = 0; i < size; i++){
+        if(array[i]->str_key != NULL) free(array[i]->str_key);
+        free(array[i]);
+    }
+}
+
+void paramArrPrint(Parameter_Hold_t** array, int size){
+    
+    for(int i = 0; i < size; i++){
+        if(array[i]->str_key != NULL){ 
+            for(int j = 0; j < array[i]->int_key; j++){
+                printf("%c", array[i]->str_key[j]);
+            }
+        }else 
+            printf("%d", array[i]->int_key);
+        
+        printf("\n");
+    }
+    
+}
+int paramHoldGetIntKey(Parameter_Hold_t* param){
+    return param->int_key;
+}
+
+void paramHoldSetIntKey(Parameter_Hold_t* param, int key){
+    param->int_key = key;
+}
+
+int paramHoldGetVal(Parameter_Hold_t* param){
+    return param->param_val;
+}
+
+void paramHoldSetVal(Parameter_Hold_t* param, int param_val){
+    param->param_val = param_val;
+}
+
+char* paramHoldGetStrKey(Parameter_Hold_t* param){
+    return param->str_key;
+}
+
+void paramHoldSetStrKey(Parameter_Hold_t* param, char* key){
+    param->str_key = key;
 }
 
 //---------------- estrutura de dados array com lista ligada -----------------//

@@ -37,16 +37,37 @@ void indexDataSetIntKey(Index_Data_t* data, int key);
 char* indexDataGetStrKey(Index_Data_t* data);
 void indexDataSetStrKey(Index_Data_t* data, char* key);
 
-void indexDataSetParam(Index_Data_t* data, int param);
-int indexDataGetParam(Index_Data_t* data);
-
 void indexHeaderDestroy(Index_Header_t* index_header);
 void indexDataDestroy(Index_Data_t* int_data);
 void stringDataDestroy(Index_Data_t* string_data);
 
+
+//---------------- estruturas para parâmetros de busca -----------------------//
+
+typedef struct parameter_hold Parameter_Hold_t;
+
+Parameter_Hold_t* parameterHoldCreate();
+Parameter_Hold_t** parameterArrayCreate(int parameter_num);
+
+void parameterArrayDestroy(Parameter_Hold_t** array, int size);
+
+void paramArrPrint(Parameter_Hold_t** array, int size);
+
+
+int paramHoldGetIntKey(Parameter_Hold_t* param);
+
+void paramHoldSetIntKey(Parameter_Hold_t* param, int key);
+
+int paramHoldGetVal(Parameter_Hold_t* param);
+
+void paramHoldSetVal(Parameter_Hold_t* param, int param_val);
+
+char* paramHoldGetStrKey(Parameter_Hold_t* param);
+
+void paramHoldSetStrKey(Parameter_Hold_t* param, char* key);
+
+
 //---------------- estrutura de dados array com lista ligada -----------------//
-
-
 
 typedef struct index_node_ Index_Node_t;
 

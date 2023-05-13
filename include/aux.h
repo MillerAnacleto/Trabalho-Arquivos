@@ -129,7 +129,9 @@ char* copyConstVarStr(char* str1);
  * 
  * @return the string read
  */
-char* readQuote12();
+char* readQuoteSize(int *size);
+
+char* stringPadding(char* str, int max_size, int str_size);
 
 /**
  * @brief compares two strings with fixed size

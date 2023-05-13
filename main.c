@@ -51,6 +51,10 @@ int main(void) {
         SQLDeleteWhere();
         break;
 
+    case 7:
+        SQLUpdateSetWhere();
+        break;
+        
     default:
         printf("funcionalidade inválida\n");
 

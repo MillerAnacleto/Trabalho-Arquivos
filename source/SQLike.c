@@ -7,6 +7,7 @@
 #include <header.h>
 #include <input_output.h>
 #include <structs.h>
+
 void SQLCreateTable() {
 
     char csv_file_name[30];
@@ -125,8 +126,6 @@ void SQLDeleteWhere(){
 
     scanf("%d", &search_num);
     
-    
-
     //fazer uma função que é o que está aqui embaixo:
     int found = 0;
     void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data) = &ptrBinDataDelete;
@@ -140,25 +139,6 @@ void SQLDeleteWhere(){
     binarioNaTela(read_file_name);
     fileIndexCreate(read_file_name, index_file_name, index_parameter, &offset);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // void SQLInsertInto(){
@@ -197,45 +177,67 @@ void SQLDeleteWhere(){
 //     binarioNaTela(index_file_name);
 // }
 
-//void SQLUpdateSetWhere(){
 
-    // char read_file_name[30];
-    // char index_file_name[30];
-    // int checker; 
-    // char consume[30];
-    // int index_parameter;
-    // int search_num = 0;
+void SQLUpdateSetWhere(){
+
+    char read_file_name[30];
+    char index_file_name[30];
+    int checker; 
+    char consume[30];
+    int index_parameter;
+    int search_num = 0;
     
 
-    // checker = scanf("%s", read_file_name);
-    // if (checker == 0) {
-    //     errorFile();
-    // }
+    checker = scanf("%s", read_file_name);
+    if (checker == 0) {
+        errorFile();
+    }
 
-    // index_parameter = searchParameter();
-    // scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
+    index_parameter = searchParameter();
+    scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
 
-    // checker = scanf("%s", index_file_name);
-    // if (checker == 0) {
-    //     errorFile();
-    // }  
+    checker = scanf("%s", index_file_name);
+    if (checker == 0) {
+        errorFile();
+    }
 
-    // fileIndexRead(index_file_name, index_parameter);
-
-    // scanf("%d", &search_num);
+    //modularizar a construção do array de parametros para poder passar como argumento!!
+    //modularizar a construção do array de parametros para poder passar como argumento!!
     
-    
-
-    // //fazer uma função que é o que está aqui embaixo:
-    // char found = 0;
-    // for(int i = 0; i < search_num; i++){
+    scanf("%d", &search_num);
+    printf("search num = %d\n", search_num);
+    //fazer uma função que é o que está aqui embaixo:
+    void (*fnt)(FILE* file, int64_t offset, Bin_Data_t* bin_data) = &ptrUpdateField;
+    char found = 0;
+    for(int i = 0; i < search_num; i++){
         
-    //     printf("\nResposta para a update %d\n", i+1);
-    //     found = SearchUpdateBinaryFile(read_file_name, index_file_name, index_parameter);
-    //     if(!found){ //
-    //         printf("Registro inexistente.\n");
-    //     }
-    // }
+        printf("\nResposta para a update %d\n", i+1);
+        found = SearchBinaryFile(read_file_name, index_file_name, index_parameter, fnt);
+        if(!found){ //
+            
 
-    // binarioNaTela(read_file_name);
-// }
+            //precisamos consumir a linha debaixo caso a função não encontre nada.
+            //deve ser tipo scanf("%["\n");
+            int substitution_num = 0;
+            scanf("%d", &substitution_num);
+            printf("substituition num = %d\n", substitution_num);
+
+            Parameter_Hold_t** param_array = parameterArrayCreate(substitution_num);
+
+            int parameter = 0;
+            for(int i = 0; i < substitution_num; i++){
+                parameter = searchParameter();
+                readFieldStdin(param_array[i], parameter, 0);
+            }
+            
+            printf("O registro:");
+            printf("inexistente");
+            printf("\n");
+            printf("deve ter os campos substituídos por: ");
+            paramArrPrint(param_array, substitution_num);
+            printf("\n");
+        }
+    }
+
+    binarioNaTela(read_file_name);
+}

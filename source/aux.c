@@ -4,6 +4,8 @@
 #include <header.h>
 #include <input_output.h>
 #include <structs.h>
+ 
+
 
 void errorFile() {
     printf("Falha no processamento do arquivo.\n");
@@ -174,42 +176,49 @@ char* copyConstVarStr(char* str1){
         str2[i] = '$';
         i++;
     }
-
+    
     return str2;
 }
 
-char* readQuote12(){
 
-    char* str = malloc(12*sizeof(char));
-    int size = 0;
+char* readQuoteSize(int *size){
+
+    int max = STR_SIZE;
+    char* str = malloc(STR_SIZE*sizeof(char));
+    *size = 0;
     char read = '\0';
-    scanf("%c", &read);
     char dq = '"';
+
+    scanf("%c", &read);
     while(read != dq){
         scanf("%c", &read);
     }
 
     scanf("%c", &read);
-    
-    while(size < 12 && read != dq){
-        str[size] = read;
-        size++;
+    while( read != dq){
+        str[*size] = read;
+        *size += 1;
         scanf("%c", &read);
-    }
-    if(size < 12){
-        while(size < 12){
-            str[size] = '$';
-            size++;
+        
+        if(*size == max-2){
+            max *= 2;
+            str = realloc(str, max*sizeof(char));
         }
     }
-    else{
-        while(read != dq){
-            scanf("%c", &read);
-        }
+    
+    return str;
+}
+
+char* stringPadding(char* str, int max_size, int str_size){
+
+    str = realloc(str, max_size*sizeof(char));
+
+    while(str_size < max_size){
+        str[str_size] = '$';
+        str_size++;
     }
 
     return str;
-
 }
 
 int stringnCmp(char* str1, char* str2, int size){
