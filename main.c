@@ -2,6 +2,9 @@
  * @file main.c
  * @author Miller Matheus Lima Anacleto Rocha (13727954) && Téo Sobrino Alves (12557192)
  * 
+ * Téo Sobrino - 100%
+ * Miller Matheus - 100%
+ * 
  * @brief Trabalho introdutório da disciplina de organização
  * de arquivos 1S 2023
  * 
@@ -58,7 +61,7 @@ int main(void) {
     case 7:
         SQLUpdateSetWhere();
         break;
-
+        
     default:
         printf("funcionalidade inválida\n");
 

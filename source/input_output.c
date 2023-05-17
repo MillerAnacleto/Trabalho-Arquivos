@@ -5,41 +5,39 @@
 #include <data.h>
 #include <files.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
 #define BRAND_SIZE 12
 #define DATE_SIZE 10
 
-// char * ?
-char* readCsvConstString(FILE* csv_file, int strlen) {
-    char* str = malloc(sizeof(char) * strlen);
+void readCsvConstString(FILE* csv_file, char* str, int str_len) {
     char last_read = '\0';
-    int str_size = -1; // value initialized at -1 to simplify the loop
+    int str_size = -1; // valor inicializado em -1 para simplificar o loop
 
-    int checker = fread(&last_read, sizeof(char), 1, csv_file); // if the field is empty the while-loop is skipped
-    endFileAssert(checker, csv_file);                           // faliure in string read
+    char checker = fread(&last_read, sizeof(char), 1, csv_file); // se o campo está vazio o loop pulado
+    endFileAssert(checker, csv_file);                           // falha na leitura da string
 
     while (last_read != ',' && last_read != '\n' && last_read != ' ') {
         str_size++;
         str[str_size] = last_read;
         checker = fread(&last_read, sizeof(char), 1, csv_file);
-        endFileAssert(checker, csv_file); // in case there is a faliure in reading the
-        // error mesage is displayed
+        endFileAssert(checker, csv_file); // caso haja falha na leitura da
+        // mensagem, erro é exibido
     }
 
-    for (int i = str_size + 1; i < strlen; i++) {
+    for (int i = str_size + 1; i < str_len; i++) {
         str[i] = '$';
     }
-    return str;
 }
 
 char* readConstString(int strlen) {
     char* str = malloc(sizeof(char) * strlen);
     char last_read = '\0';
-    int str_size = 0; // value initialized at -1 to simplify the loop
+    int str_size = 0; // valor inicializado em -1 para simplificar o loop
 
-    scanf("%c", &last_read); // if the field is empty the while-loop is skipped
+    scanf("%c", &last_read); // se o campo está vazio o loop pulado
     while(last_read == ' ' || last_read == '\n'){
         scanf("%c", &last_read);
     }
@@ -68,11 +66,11 @@ char* readConstString(int strlen) {
 char* readCsvVarString(FILE* csv_file, int* strlen) {
     char* str = malloc(sizeof(char));
     char last_read = '\0';
-    int str_size = 0; // unlike the other loop, the final value of the string
-    // has size 1 + original string, because the '|' character must be added, therefore it must
-    // be initialized in 0
+    int str_size = 0; // diferente do outro loop, o valor final da string
+    // tem tamanho 1 + string original, porque o caracter '|' deve ser adicionado, então deve ser
+    // inicializado em 0
 
-    char checker = fread(&last_read, sizeof(char), 1, csv_file); // if the field is empty the while-loop is skipped
+    char checker = fread(&last_read, sizeof(char), 1, csv_file); //se o campo é vazio o loop é evitado
     endFileAssert(checker, csv_file);
 
     while (last_read != ',' && last_read != '\n') {
@@ -92,11 +90,9 @@ char* readCsvVarString(FILE* csv_file, int* strlen) {
 char* readVarString(int* strlen) {
     char* str = malloc(sizeof(char));
     char last_read = '\0';
-    int str_size = 0; // unlike the other loop, the final value of the string
-    // has size 1 + original string, because the '|' character must be added, therefore it must
-    // be initialized in 0
+    int str_size = 0; //ao contrário do loop anterior é vantajoso iniciar em 0 pelo '|'
 
-    scanf("%c", &last_read); // if the field is empty the while-loop is skipped
+    scanf("%c", &last_read); //se o campo é vazio o loop é evitado
     while(last_read == ' ' || last_read == '\n'){
         scanf("%c", &last_read);
     }
@@ -110,10 +106,6 @@ char* readVarString(int* strlen) {
             scanf("%c", &last_read);
 
             str = realloc(str, (str_size + 1)*sizeof(char));
-            if(str_size > 50)
-                exit(0);
-
-            // (last != ' ' && last != '\n') || str[str_size] != '"'
         }
         str[str_size] = '\0';
     }
@@ -131,16 +123,16 @@ char* readVarString(int* strlen) {
     return str;
 }
 
-int readCsvInt(FILE* csv_file) {
-    // the reading occurs byte by byte, to avoid problems with empty fields
+int32_t readCsvInt(FILE* csv_file) {
+    // a leitura ocorre byte a byte, para evitar problemas com campo vazio.
     int integer = 0;
-    char last_read[11]; // 10 digits is the maximum number a 32 bit integer can
-    // have,another byte is added for the comma.
-
+    char last_read[11];//10 dígitos é o máximo que um int3 bits pode ter
+    //adicionamos mais 1 para a vírgula.
+    
     int str_size = 0;
 
     char checker = fread(&last_read[0], sizeof(char), 1, csv_file);
-    endFileAssert(checker, csv_file); //failure displays the error message
+    endFileAssert(checker, csv_file);
 
     while (last_read[str_size] != ',') {
         str_size++;
@@ -157,11 +149,9 @@ int readCsvInt(FILE* csv_file) {
 }
 
 int readInt() {
-    // the reading occurs byte by byte, to avoid problems with empty fields
+    // segue a mesma lógica da função anterior, pois houveram problemas na entrada
     int integer = 0;
-    char last_read[11]; // 10 digits is the maximum number a 32 bit integer can
-    // have,another byte is added for the comma.
-
+    char last_read[11];
     int str_size = 0;
 
     scanf("%c", &last_read[0]);
@@ -184,11 +174,17 @@ int readInt() {
     return integer;
 }
 
-Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists){
+Index_Data* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists){
 
-    Index_Data_t* idx_data = indexDataCreate();
-    Bin_Data_t* data = dataBinaryRead(file);
-    *offset += 32 + varStrSize(data);
+    Index_Data* idx_data = indexDataCreate();
+    Data_Register* data = dataBinaryRead(file);
+    *offset += dataGetSize(data);
+
+    if(dataGetRemoved(data) == '1'){
+        dataDestroy(data);
+        *exists = 0;
+        return idx_data;
+    }
     int key = EMPTY_INT_FIELD;
     char* str = NULL;
 
@@ -199,65 +195,96 @@ Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* 
     else{
         str = dataGetStrField(data, parameter);
         if(str != NULL){
-            indexDataSetStrKey(idx_data, str);
-            free(str);
+            if(str[0] != '$' && str[0] != '|'){
+                indexDataSetStrKey(idx_data, str); 
+                free(str);          
+            }
+            else{
+                free(str);
+                str = NULL;
+            }
         }
+        
     }
 
-    indexDataSetIntKey(idx_data, key);
-    indexDataSetStrKey(idx_data, str);
-    
-    // modificar
-    if((str != NULL || (key != EMPTY_INT_FIELD )) && !dataIsRemoved(data)) *exists = 1;
-    
     dataDestroy(data);
+    
+    if(str != NULL || (key != EMPTY_INT_FIELD)) *exists = 1;
     return idx_data;
 }
 
-void printField(char* str, int64_t offset, int key, int parameter){
-
-    if(parameter > 1 && str == NULL){
-        printf("Não consta\n");
-        return;
-    }
-
-    if(parameter <= 1){
-        printf("%d\n", key);
-    }
-    else{
-        if(str[0] == '|' || str[0] == '$'){
-            printf("Não consta\n");
-        }
-
-        else{
-            int i = 0;
-            while( i < STR_SIZE && str[i] != '|' && str[i] != '\0'){
-                printf("%c", str[i]);
-                i++;
-            }
-            while(i < STR_SIZE){
-                printf("$");
-                i++;
-            }
-            printf("\n");
-        }
-    }
-    printf("\noffset = %ld\n", offset);
-}
-
-void readFieldStdin(Index_Data_t* array_elem, int parameter){
+void readFieldStdin(Parameter_Hold* array_elem, int parameter, int size){
     if(parameter <= 1){
         int key;
         scanf("%d", &key);
-        indexDataSetIntKey(array_elem, key);
+        paramHoldSetIntKey(array_elem, key);
     }
     else{
-        char* str = readQuote12();
-        indexDataSetStrKey(array_elem, str);
-        free(str);
+        int str_size = 0;
+        char* str = readQuoteSize(&str_size);
+        if(parameter == 5 || parameter == 2){
+            str = stringPadding(str, STR_SIZE, str_size);
+            paramHoldSetIntKey(array_elem, STR_SIZE);
+
+        }else if(size){
+           str = stringPadding(str, size, str_size);
+           paramHoldSetIntKey(array_elem, size);
+        }
+
+        else{
+            paramHoldSetIntKey(array_elem, str_size);
+        }
+         
+        paramHoldSetStrKey(array_elem, str);
     }
 
-    // int64_t cast = (int64_t) parameter; 
-    // indexDataSetOffset(array_elem, cast);
-    indexDataSetParam(array_elem, parameter);
+    paramHoldSetVal(array_elem, parameter);
+}
+
+void readFieldBinStdin(Parameter_Hold* elem, int param){
+
+    if(param <= 1){
+        int read = readInt();
+        paramHoldSetIntKey(elem, read);
+        paramHoldSetVal(elem, param);
+        return;
+    }
+
+    char* str;
+    int size = 0;
+    switch (param){
+    case 2:
+
+        str = readConstString(DATE_SIZE);
+        paramHoldSetStrKey(elem, str);
+        paramHoldSetIntKey(elem, DATE_SIZE);
+        //free(str);
+        break;
+    case 3:
+        
+        size = 0;
+        str = readVarString(&size);
+        paramHoldSetStrKey(elem, str);
+        paramHoldSetIntKey(elem, size);
+        break;
+    case 4:
+        size = 0;
+        str = readVarString(&size);
+        paramHoldSetStrKey(elem, str);
+        paramHoldSetIntKey(elem, size);
+        break;
+
+    case 5:
+
+        str = readConstString(BRAND_SIZE);
+        paramHoldSetStrKey(elem, str);
+        paramHoldSetIntKey(elem, BRAND_SIZE);
+        //free(str);
+        break;
+    default:
+        break;
+    }
+
+    paramHoldSetVal(elem, param);
+
 }

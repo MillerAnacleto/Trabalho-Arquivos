@@ -6,42 +6,52 @@
 #include <sys/types.h>
 #include <aux.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
-/**
- * @brief writes the header struct fields in a binary file
- *
- * @param binary_file file in which the fields will be written
- * @param header struct from which the filds will be read
- * @return int controls the number of writes to verify if all fields were written
- */
-int binHeaderBinaryWrite(FILE* binary_file, Bin_Header_t* header);
+#define BIN_HEADER_SIZE 17
+#define INDEX_HEADER_SIZE 5
 
 /**
- * @brief it reads the Header of the binary file
+ * @brief escreve o cabeçalho em um arquivo de dados 
  *
- * @param bin_file file that will be read
- *
+ * @param data_file arquivo de dados 
+ * @param header cabeçalho
+ * @return número de itens escritos com sucesso
+ */
+int dataHeaderWrite(FILE* data_file, Data_Header* header, int64_t offset);
+
+/**
+ * @brief lê o cabeçalho de um arquivo de dados
+ * @param data_file file that will be read
  * @return returns the filled header struct
  */
-Bin_Header_t* binHeaderRead(FILE* binary_file);
+Data_Header* dataHeaderRead(FILE* data_file);
 
 /**
- * @brief reads the index header
+ * @brief lê o cabeçalho do índice
  * 
- * @param index 
- * @return Index_Header_t* 
+ * @param index indice sendo lido
+ * @return struct de cabeçalho de índice preenchida 
  */
-Index_Header_t* indexHeaderRead(FILE* index);
+Index_Header* indexHeaderRead(FILE* index);
 
 /**
- * @brief writes index header
+ * @brief escreve o índice de cabeçalho
  * 
- * @param binary_file 
- * @param header 
- * @return int 
+ * @param data_file arquivo de índice
+ * @param header struct de cabeçalho 
+ * @return numero de itens escreitos com sucesso
  */
-int indexHeaderWrite(FILE* binary_file, Index_Header_t* header);
+int indexHeaderWrite(FILE* index_file, Index_Header* header, int64_t offset);
+
+/**
+ * @brief cria uma struct de cabeçalho vazia 
+ * 
+ * @return a struct de cabeçalho vazia
+ */
+Index_Header* emptyIndexHeaderCreate();
+
 
 #endif // !HEADER_H_

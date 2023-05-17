@@ -3,7 +3,9 @@
         "types.h": "c",
         "stdint.h": "c",
         "stdlib.h": "c",
-        "input_output.h": "c"
+        "input_output.h": "c",
+        "aux.h": "c",
+        "sqlike.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

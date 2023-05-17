@@ -1,4 +1,4 @@
-7 binario11.bin idCrime inteiro indice11.bin 3
+7 bin/binario11.bin idCrime inteiro bin/indice11.bin 3
 
 1 idCrime 91
 1 marcaCelular "APPLE"

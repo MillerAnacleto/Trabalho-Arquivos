@@ -1,4 +1,4 @@
-4 binario5.bin lugarCrime string indice5.bin 6
+4 bin/binario5.bin lugarCrime string bin/indice5.bin 6
 1 lugarCrime "SAO PAULO"
 1 numeroArtigo 171
 2 lugarCrime "SOROCABA" descricaoCrime "FURTO (ART. 155) - OUTROS"
