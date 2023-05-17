@@ -5,23 +5,24 @@
 #include <data.h>
 #include <files.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
 void fileBinaryPrintAsCsv(char* file_name) {
 
-    FILE* binary_file = binaryFileOpenRead(file_name);
-    Bin_Header_t* header = binHeaderRead(binary_file);
+    FILE* data_file = binaryFileOpenRead(file_name);
+    Data_Header* header = dataHeaderRead(data_file);
     if (headerGetStatus(header) == '0') {
-        fileClose(binary_file);
+        fileClose(data_file);
         errorFile();
     }
 
-    Bin_Data_t* data;
+    Data_Register* data;
     int num_structs = headerGetStructNum(header);
     if (num_structs != 0) {
         for (int i = 0; i < num_structs; i++) {
-            data = dataBinaryRead(binary_file);
+            data = dataBinaryRead(data_file);
             if (dataGetRemoved(data) != '1') {
                 dataPrintCsvStyle(data);
                 printf("\n");
@@ -30,59 +31,56 @@ void fileBinaryPrintAsCsv(char* file_name) {
         }
     } else {
         free(header);
-        fileClose(binary_file);
+        fileClose(data_file);
         errorReg();
     }
 
     free(header);
 
-    fileClose(binary_file);
+    fileClose(data_file);
 }
 
-
-// falta checar se o arquivo está inconsistente
 void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
-    Bin_Data_t* data;
+    Data_Register* data;
 
-    int size_array[2];   // array to store the size of variable strings
-    int accumulator = 0; // accumulator to calculate the offset byte
+    int size_array[2];   // array para armazenar o tamanho das strings variáveis
+    int accumulator = 0; // acumulador para calcular o byte offset
     int binary_write_checker;
 
     FILE* csv_file = csvFileOpen(csv_file_name);
-    FILE* binary_file = binaryFileOpenWrite(binary_file_name);
+    FILE* data_file = binaryFileOpenWrite(binary_file_name);
 
-    Bin_Header_t* header = headerCreate(); // Create the header file after opening, in case the
-    // file doesn't exist, the header won't be created
+    Data_Header* header = headerCreate(); // Cria o cabeçalho do arquivo
 
     headerSetStatus(header, '0');
 
-    binary_write_checker = binHeaderBinaryWrite(binary_file, header);
+    binary_write_checker = dataHeaderWrite(data_file, header, -1);
     if (binary_write_checker != 4) {
         fileClose(csv_file);
-        fileClose(binary_file);
+        fileClose(data_file);
         errorFile();
     }
 
     int i = 0;
     while (!feof(csv_file)) {
         data = dataCsvRead(csv_file, size_array);
-        if (data == NULL) { // if the attempt of reading a file is failed it
-            // must be the end of file
+        if (data == NULL) { // se a tentativa de leitura falhou
+            // deve ser o fim do arquivo
             if (feof(csv_file)) {
                 break;
             } else {
                 fileClose(csv_file);
-                fileClose(binary_file);
-                errorFile(); // in case its not the end of file some error must
-                // have ocurred
+                fileClose(data_file);
+                errorFile(); // caso não seja o fim do arquvio, algum erro
+                // deve ter ocorrido
             }
         }
 
-        binary_write_checker = dataBinaryWrite(binary_file, data, size_array, 0);
+        binary_write_checker = dataBinaryWrite(data_file, data, size_array, -1);
         int write_checker = 4 + DATE_SIZE + BRAND_SIZE + size_array[0] + size_array[1];
         if (write_checker != binary_write_checker) {
             fileClose(csv_file);
-            fileClose(binary_file);
+            fileClose(data_file);
             errorFile();
         }
 
@@ -93,764 +91,269 @@ void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name) {
 
     fileClose(csv_file);
     headerSetStructNum(header, i);
-    int64_t offset = 17 + accumulator; // offset caused by the header + the variable strings
-    offset = ((long long int)(i) * (32)) + offset; // the struct fields summation is 32 bytes
-    headerSetOffset(header, offset);
+    int64_t offset = BIN_HEADER_SIZE + accumulator; // offset causado pelo header + strings variáveis
+    offset = ((long long int)(i) * DATA_BASE_SIZE) + offset; // a soma da parte fixa do dado é 32 bytes
     
+    headerSetOffset(header, offset);
     headerSetStatus(header, '1');
-    fseek(binary_file, 0, SEEK_SET); // reseting the pointer to the begginig in
-    // order to rewrite the header
 
-    binHeaderBinaryWrite(binary_file, header);
+    dataHeaderWrite(data_file, header, 0);
     free(header);
 
-    fileClose(binary_file);
+    fileClose(data_file);
     binarioNaTela(binary_file_name);
-}
-
-int indexArrayPrint(Index_Node_t** index_array, int size){
-
-    int acc = 0;
-    Index_Data_t* data;
-
-    for(int i = 0; i < size; i++){
-
-        Index_Node_t* next = index_array[i];
-
-        while(next != NULL){
-            
-            printf("i = %d\n", i);
-            data = indexNodeGetData(next);
-            int64_t offset = indexDataGetOffset(data);
-            int int_key =  indexDataGetIntKey(data);
-            char* char_key = indexDataGetStrKey(data);
-
-            if(int_key != EMPTY_INT_FIELD){
-                printf("%d ", int_key);
-                //acc += fwrite(&int_key, sizeof(int), 1, index_file);
-            }
-            else if(char_key != NULL){
-                printf("%c%c%c%c ", char_key[0], char_key[1], char_key[2], char_key[3]);
-                //acc += fwrite(char_key, sizeof(char), STR_SIZE, index_file);
-            }
-            printf("%ld\n", offset);
-            //acc += fwrite(&offset, sizeof(int64_t), 1, index_file);
-
-            next = indexNodeGetNext(next);
-        }
-    }
-
-    return acc;
 }
 
 void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset){
 
     FILE* read_file = binaryFileOpenRead(binary_file_name);
-
-    Bin_Header_t* header = binHeaderRead(read_file);
-    int size = headerGetStructNum(header);
-    *offset += 17; //offset provocado pelo header
-    //char* str = NULL;
-
-    Index_Header_t* index_header = indexHeaderCreate();
-    indexHeaderSetStatus(index_header, '0');
-    //escrever o header
-
-    Index_Node_t** index_array = indexArrayCreate(size);
+    Data_Header* header = dataHeaderRead(read_file);
     
-    int unique_node_num = 0;
-
-    Index_Data_t* data;
-    //colocar o que está dentro do for numa função.
+    //reescrevemos o header do arq de dados com status '0'
+    headerSetStatus(header, '0');
+    dataHeaderWrite(read_file, header, 0);
+    
+    int size = headerGetStructNum(header);
+    *offset += BIN_HEADER_SIZE; //offset provocado pelo header do arq de dados
+    
+    Index_Node** index_array = indexArrayCreate(size);
+    
+    int non_empty = 0;
+    Index_Data* data;
+    
     for(int i = 0; i < size; i++){
             
-        int64_t offset_temp = *offset;
+        int64_t offsetemp = *offset;
         char exists = 0;
         data = readBinaryField(read_file, parameter, offset, &exists);
-        indexDataSetOffset(data, offset_temp);
-        
+
         if(exists){
-            indexNodeSetData(index_array, unique_node_num, data);
-            unique_node_num++;
+            indexDataSetOffset(data, offsetemp);
+            indexNodeSetData(index_array, non_empty, data);
+            non_empty++;
         }
         else{
             free(data);
         }
     }
+
+    //reesecrevemos o header do arq de dados com status '1'
+    headerSetStatus(header, '1');
+    dataHeaderWrite(read_file, header, 0);
     fileClose(read_file);
 
-    dataIndexArraySort(index_array, unique_node_num, parameter);
-
-    //modularizar melhor? Talvez fazer numa função de write?
     FILE* index_file = binaryFileOpenWrite(index_file_name);
+
+    //escrevemos o header do arq de indice com status '0'
+    Index_Header* index_header = emptyIndexHeaderCreate();
+    indexHeaderWrite(index_file, index_header, -1);
     
-    indexHeaderWrite(index_file, index_header);
-    dataIndexArrayWrite(index_file, index_array, unique_node_num);
+    dataIndexArraySort(index_array, non_empty, parameter);
+    dataIndexArrayWrite(index_file, index_array, non_empty, parameter);
+    indexArrayDestroy(index_array, size, non_empty);
 
-    indexArrayDestroy(index_array, size, unique_node_num);
-
+    //escrevemos o header do arq de indice com status '1' e num de structs setado
     indexHeaderSetStatus(index_header, '1');
-    indexHeaderSetNum(index_header, unique_node_num);
-    fseek(index_file,0, SEEK_SET);
-    indexHeaderWrite(index_file, index_header);
+    indexHeaderSetNum(index_header, non_empty);
+    indexHeaderWrite(index_file, index_header, 0);
     
     free(index_header);
     free(header);
     
     fileClose(index_file);
+
+    binarioNaTela(index_file_name);
 }
 
-Index_Node_t** fileIndexRead(char* index_filename, int parameter ){
-    
-    int node_num = 0; 
-    int unique_node_num = 0;
+Index_Node** fileIndexRead(char* index_filename, int parameter ){
+     
+    int diff_node_num = 0;
     
     FILE* index = binaryFileOpenRead(index_filename);
-    Index_Header_t* header = indexHeaderRead(index);
+    Index_Header* header = indexHeaderRead(index);
     int size = indexHeaderGetNum(header);
 
     if(header == NULL) return NULL;
 
-    Index_Node_t** array = indexArrayCreate(size);
+    Index_Node** array = indexArrayCreate(size);
 
     if(parameter <= 1){
-        dataIndexArrayIntRead(index, array, size, &unique_node_num);
+        dataIndexArrayIntRead(index, array, size, &diff_node_num);
     }
     else{
-        dataIndexArrayStrRead(index, array, size, &unique_node_num);
+        dataIndexArrayStrRead(index, array, size, &diff_node_num);
     }   
 
-    indexArrayDestroy(array, node_num, unique_node_num);
+    indexArrayDestroy(array, size, diff_node_num);
 
     free(header);
     fileClose(index);
     return array;
 }
 
-/*
-    search: data
-    delete: offset, file
-    update: offset, file
-*/
 
-int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter){
+
+int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter, 
+    Parameter_Hold** (*fnt)(fntptr)){
 
     int found = 0;
-    FILE* binary_file = binaryFileOpenRead(filename);
+    FILE* data_file = binaryFileOpenRead(filename);
     FILE* index_file = binaryFileOpenRead(index_file_name);
-    int parameter_num = 0;
     int parameter = 0;
     char binary_flag = 0;
     int parameter_index = 0;
-    //
-    Bin_Header_t* header;
-    
-    { // abre o bin header
-        header = binHeaderRead(binary_file);
-        if (headerGetStatus(header) == '0') {
-            fileClose(binary_file);
-            fileClose(index_file);
-            errorFile();
-        }
+    int parameter_num = 0;
 
-        headerSetStatus(header, '0');
-        printf("header: %c %ld %d %d\n", headerGetStatus(header), headerGetOffset(header), headerGetStructNum(header),headerGetRemStructNum(header));
-    }
-    
     scanf("%d", &parameter_num);
-
-    Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
-    for(int kj = 0; kj < parameter_num; kj++){
-        array[kj] = indexDataCreate();
-    }
-
-    for(int j = 0; j < parameter_num; j++){
-        
-        parameter = searchParameter();
-        if(parameter == index_parameter){
-            binary_flag = 1;
-            parameter_index = j;
-        }
-        readFieldStdin(array[j], parameter);
-    }
-
+    
+    Parameter_Hold** array = parameterArrayRead(parameter_num, index_parameter, &binary_flag, &parameter_index);
+    
     if(binary_flag){
-        found = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index);
+        found = binarySearchIndexArray(index_file, data_file, array, parameter_num, parameter_index, fnt);
     }
     else{
-        found = linearSearchBinaryFile(binary_file, header, array, parameter_num, 1);
+        found = linearSearchBinaryFile(data_file, array, parameter_num, fnt);
     }
-
-    for(int kj = 0; kj < parameter_num; kj++){
-        indexDataDestroy(array[kj]);
-    }
-
-    //    
-    free(header);
-    free(array);
-    fileClose(binary_file);
+    
+    parameterArrayDestroy(array, parameter_num);
+    
+    fileClose(data_file);
     fileClose(index_file);
 
     return found;
 }
 
-// int SearchUpdateBinaryFile(char* filename, char* index_file_name, int index_parameter){
-
-//     char found = 0;
-//     FILE* binary_file = binaryFileOpenRead(filename);
-//     FILE* index_file = binaryFileOpenRead(index_file_name);
-//     int parameter_num = 0;
-//     int parameter = 0;
-//     int set_num = 0;
-//     int set_campo = 0;
-//     char binary_flag = 0;
-//     int parameter_index = 0;
-    
-//     scanf("%d", &parameter_num);
-    
-//     printf("%d\n", parameter_num);
-
-//     Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
-//     for(int kj = 0; kj < parameter_num; kj++){
-//         array[kj] = indexDataCreate();
-//     }
-
-//     for(int j = 0; j < parameter_num; j++){
-        
-//         parameter = searchParameter();
-//         if(parameter == index_parameter){
-//             binary_flag = 1;
-//             parameter_index = j;
-//         }
-//         readFieldStdin(array[j], parameter);
-//         if(indexDataGetParam(array[j])<=1)
-//             printf("%d %d\n",indexDataGetParam(array[j]), indexDataGetIntKey(array[j]));
-//         else
-//             printf("%d %s\n",indexDataGetParam(array[j]), indexDataGetStrKey(array[j]));
-//     }
-
-//     scanf("%d", &set_num);
-    
-//     printf("%d\n", set_num);
-
-//     Index_Data_t** array_set = malloc(set_num*sizeof(Index_Data_t*));
-//     for(int kj = 0; kj < set_num; kj++){
-//         array_set[kj] = indexDataCreate();
-//     }
-
-//     for(int j = 0; j < set_num; j++){
-        
-//         set_campo = searchParameter();
-//         if(set_campo == index_parameter){
-//             binary_flag = 1;
-//         }
-//         readFieldStdin(array_set[j], set_campo);
-//         if(indexDataGetParam(array_set[j])<=1)
-//             printf("%d %d\n",indexDataGetParam(array_set[j]), indexDataGetIntKey(array_set[j]));
-//         else
-//             printf("%d %s\n",indexDataGetParam(array_set[j]), indexDataGetStrKey(array_set[j]));
-//     }
-    
-//     int64_t* arr = NULL;
-
-//     if(binary_flag){
-//         arr = binarySearchIndexArray(index_file, binary_file, array, parameter_num, parameter_index);
-//     }
-//     else{
-//         arr = linearSearchBinaryFile(binary_file, array, parameter_num, 1);
-//     }
-
-//     printf("start update-----------------------\n");
-
-//     for(int i = 0; arr != NULL && arr[i] != -1; i++){
-//         //printf("\noset: %ld\n", arr[i]);
-//         fseek(binary_file, arr[i], SEEK_SET);
-//         Bin_Data_t* bin_data = dataBinaryRead(binary_file);
-//         dataPrintCsvStyle(bin_data);
-//     }
-
-//     if(arr != NULL && arr[0] != -1){
-//         found = 1;
-        
-//     }
-//     free(arr);
-     
-
+void removedStructUpdate(char* read_file_name,int found){
    
+    FILE* data_file = binaryFileOpenRead(read_file_name);
+    Data_Header* bin_header = dataHeaderRead(data_file);
+    found += headerGetRemStructNum(bin_header);
+    headerSetRemStructNum(bin_header, found);
+    dataHeaderWrite(data_file, bin_header, 0);
 
-//     for(int kj = 0; kj < parameter_num; kj++){
-//         indexDataDestroy(array[kj]);
-//     }
-//     free(array);
-//     fileClose(binary_file);
-//     fileClose(index_file);
+    free(bin_header);
+    fileClose(data_file);
 
-//     return found;
-// }
-
-// atualizar os headers
-int SearchDeleteBinaryFile(char* filename, char* index_file_name, int index_parameter){
-
-    int found = 0;
-    FILE* binary_file = binaryFileOpenReadWrite(filename);
-    FILE* index_file = binaryFileOpenRead(index_file_name);
-    int parameter_num = 0;
-    int parameter = 0;
-    char binary_flag = 0;
-    int parameter_index = 0;
-    Bin_Header_t* header;
-
-    { // abre o bin header
-        header = binHeaderRead(binary_file);
-        if (headerGetStatus(header) == '0') {
-            fileClose(binary_file);
-            fileClose(index_file);
-            errorFile();
-        }
-
-    }
-
-    scanf("%d", &parameter_num);
-
-    Index_Data_t** array = malloc(parameter_num*sizeof(Index_Data_t*));
-    for(int kj = 0; kj < parameter_num; kj++){
-        array[kj] = indexDataCreate();
-    }
-
-    for(int j = 0; j < parameter_num; j++){
-        
-        parameter = searchParameter();
-        if(parameter == index_parameter){
-            binary_flag = 1;
-            parameter_index = j;
-        }
-        readFieldStdin(array[j], parameter);
-    }
-
-    if(binary_flag){
-        found = binarySearchDeleteIndexArray(index_file, binary_file, array, parameter_num, parameter_index);
-    }
-    else{
-        found = linearDeleteBinaryFile(binary_file, header, array, parameter_num);
-    }
-
-    for(int kj = 0; kj < parameter_num; kj++){
-        indexDataDestroy(array[kj]);
-    }
-
-
-    { // atualiza e escreve o bin header
-        printf("header: %c %ld %d %d\n", headerGetStatus(header), headerGetOffset(header), headerGetStructNum(header),headerGetRemStructNum(header));
-    
-        headerSetRemStructNum(header, headerGetRemStructNum(header) + found);
-
-        headerSetStatus(header, '1');
-
-        printf("header: %c %ld %d %d\n", headerGetStatus(header), headerGetOffset(header), headerGetStructNum(header),headerGetRemStructNum(header));
-        binHeaderBinaryWrite(binary_file, header);
-    }
-
-    printf("deleted: %d\n", found);
-
-    free(header);
-    free(array);
-    fileClose(binary_file);
-    fileClose(index_file);
-
-    return found;
 }
 
-int linearSearchBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size, char print){
+void insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter){
 
-    int found = 0;
-    
-    int64_t offset = 0;
-    offset += 17;
-    int struct_num = headerGetStructNum(header);
-
-    for(int i = 0; i < struct_num; i++){
-        Bin_Data_t* bin_data = dataBinaryRead(file);
-        int var = 32 + varStrSize(bin_data);
-        offset += var;
-
-        // if(dataGetRemoved(bin_data) == '1'){
-        //     dataDestroy(bin_data);
-        //     continue;
-        // }
-
-        if(dataParamCompare(bin_data, array, array_size)){
-            found++;
-            
-            if(print){
-                dataPrintCsvStyle(bin_data);
-                printf("\n");
-            }
-        }
-
-        dataDestroy(bin_data);
-    }
-
-    return found;
-}
-
-int linearDeleteBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size){
-    
-    int found = 0;
-
-    int64_t offset = 0;
-    offset += 17;
-    int struct_num = headerGetStructNum(header);
-
-    for(int i = 0; i < struct_num; i++){
-        Bin_Data_t* bin_data = dataBinaryRead(file);
-        int var = 32+varStrSize(bin_data);
-        offset += var;
-
-        if(dataGetRemoved(bin_data) == '1'){
-            dataDestroy(bin_data);
-            continue;
-        }
-        if(dataParamCompare(bin_data, array, array_size)){
-            found++;
-
-            int64_t str_size = varStrSize(bin_data);
-            int64_t data_offset =  str_size + DATA_BASE_SIZE;
-            dataMarkDeleted(file, data_offset);
-        }
-
-        dataDestroy(bin_data);
-    }
-
-    return found;
-}
-
-int binarySearchIndexInt(Index_Node_t** index, int beg, int end, int field_val){
-    
-    int mid = (beg+end)/2;
-
-    int curr_val = indexDataGetIntKey(indexNodeGetData(index[mid]));
-    if(beg >= end){
-        
-        if(curr_val != field_val) return -1;
-        return mid;
-    }
-
-    if(curr_val > field_val){
-        return binarySearchIndexInt(index, beg, mid-1, field_val);
-    }
-    else if(curr_val < field_val){
-        return binarySearchIndexInt(index, mid+1, end, field_val);
-    }
-    else return mid;
-    
-}
-
-int binarySearchIndexStr(Index_Node_t** index, int beg, int end, char* str){
-    int mid = (beg+end)/2;
-
-    char* curr_val = indexDataGetStrKey(indexNodeGetData(index[mid]));
-    if(beg >= end){
-        
-        if(stringnCmp(curr_val, str, STR_SIZE) != 0 ) return -1;
-        return mid;
-    }
-
-    if(stringnCmp(curr_val, str, STR_SIZE) > 0){
-        return binarySearchIndexStr(index, beg, mid-1, str);
-    }
-    else if(stringnCmp(curr_val, str, STR_SIZE) < 0){
-        return binarySearchIndexStr(index, mid+1, end, str);
-    }
-    else return mid;
-}
-
-int nodeListCompare(Index_Node_t* node, Index_Data_t** array,
-    FILE* binary_file, int parameter_num, int print){
-    int found = 0;
-    
-    while(node != NULL){
-        int64_t offset = indexDataGetOffset(indexNodeGetData(node));
-        fseek(binary_file, offset, SEEK_SET);
-        Bin_Data_t* bin_data = dataBinaryRead(binary_file);
-        // printf("offset: %ld ||||| data_bin: ", offset);
-        // dataPrintCsvStyle(bin_data);
-        // printf("  foi retornada pela busca bin\nparameternum: %d\n", parameter_num);
-        if(dataParamCompare(bin_data, array, parameter_num)){
-            
-            // if(dataGetRemoved(bin_data) == '1'){
-            //     dataDestroy(bin_data);            
-            //     node = indexNodeGetNext(node);
-            //     continue;
-            // }
-
-            found++;
-
-            if(print){
-                dataPrintCsvStyle(bin_data);
-                printf("\n");
-            }
-        }
-        dataDestroy(bin_data);
-        node = indexNodeGetNext(node);
-    }
-
-    return found;
-}
-
-int nodeListCompareDelete(Index_Node_t* node, Index_Data_t** array,
-    FILE* binary_file, int parameter_num){
-    int found = 0;
-    
-    while(node != NULL){
-        int64_t offset = indexDataGetOffset(indexNodeGetData(node));
-        fseek(binary_file, offset, SEEK_SET);
-        Bin_Data_t* bin_data = dataBinaryRead(binary_file);
-        dataPrintCsvStyle(bin_data);
-        putchar('\n');
-        printf("compare: %d\n", dataParamCompare(bin_data, array, parameter_num));
-    
-        if(dataParamCompare(bin_data, array, parameter_num)){
-
-            if(dataGetRemoved(bin_data) == '1'){
-                dataDestroy(bin_data);            
-                node = indexNodeGetNext(node);
-                continue;
-            }
-
-            found++;
-
-            int64_t str_size = varStrSize(bin_data);
-            int64_t data_offset =  str_size + DATA_BASE_SIZE;
-            dataPrintCsvStyle(bin_data);
-            putchar('\n');
-            dataMarkDeleted(binary_file, data_offset);
-        }
-        dataDestroy(bin_data);
-        node = indexNodeGetNext(node);
-    }
-
-    return found;
-}
-
-int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index){
-    int found = 0;
-
-    printf("binaria\n");
-    Index_Header_t* index_header = indexHeaderRead(index_file);
-    int size = indexHeaderGetNum(index_header);
-    int unique_node_num = 0;
-    int index_pos = 0;
-
-    Index_Node_t** node_array = indexArrayCreate(size);
-    // isso aqui é modularizavel,  n?
-    int param = indexDataGetParam(array[parameter_index]);
-    if(param <= 1){
-        dataIndexArrayIntRead(index_file, node_array, size, &unique_node_num);
-        int field_val = indexDataGetIntKey(array[parameter_index]);
-        index_pos = binarySearchIndexInt(node_array, 0, unique_node_num, field_val);
-    }
-    else{
-        printf("binaria str\n");
-        dataIndexArrayStrRead(index_file, node_array, size, &unique_node_num);
-        char* field_val = indexDataGetStrKey(array[parameter_index]);
-        index_pos = binarySearchIndexStr(node_array, 0, unique_node_num, field_val);
-    }
-
-    if(index_pos == -1){
-        
-        indexArrayDestroy(node_array, size, unique_node_num);
-        free(index_header);
-        return 0;
-    }
-
-    Index_Node_t* n = node_array[index_pos];
-
-    found = nodeListCompare(n, array, binary_file, parameter_num, 1);
-
-    printf("found: %d\n", found);
-
-    indexArrayDestroy(node_array, size, unique_node_num);
-    free(index_header);
-
-    return found;
-}
-
-int binarySearchDeleteIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index){
-
-    int found = 0;
-    
-    Index_Header_t* index_header = indexHeaderRead(index_file);
-    int size = indexHeaderGetNum(index_header);
-    int unique_node_num = 0;
-    int index_pos = 0;
-
-    Index_Node_t** node_array = indexArrayCreate(size);
-    int param = indexDataGetParam(array[parameter_index]);
-    if(param <= 1){
-        dataIndexArrayIntRead(index_file, node_array, size, &unique_node_num);
-        int field_val = indexDataGetIntKey(array[parameter_index]);
-        index_pos = binarySearchIndexInt(node_array, 0, unique_node_num, field_val);
-    }
-    else{
-        dataIndexArrayStrRead(index_file, node_array, size, &unique_node_num);
-        char* field_val = indexDataGetStrKey(array[parameter_index]);
-        index_pos = binarySearchIndexStr(node_array, 0, unique_node_num, field_val);
-    }
-
-    if(index_pos == -1){
-        
-        indexArrayDestroy(node_array, size, unique_node_num);
-        free(index_header);
-        return 0;
-    }
-
-    Index_Node_t* n = node_array[index_pos];
-
-    found = nodeListCompareDelete(n, array, binary_file, parameter_num);
-    printf("found: %d\n", found);
-
-    indexHeaderSetNum(index_header, indexHeaderGetNum(index_header) + found);
-
-    indexArrayDestroy(node_array, size, unique_node_num);
-    free(index_header);
-
-    return found;
-}
-
-// retorno necessário?
-char insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter){
-
-    FILE* binary_file = binaryFileOpenReadWrite(filename);
+    // abre arquivos
+    FILE* data_file = binaryFileOpenReadWrite(filename);
     FILE* index_file = binaryFileOpenReadWrite(index_file_name);
+
     int size_array[2];
-    Bin_Data_t* data;
-    Bin_Header_t* header;
-    Index_Header_t* index_header;
+    Data_Register* data;
+    Data_Header* header;
+    Index_Header* index_header;
     int64_t offset;
+    int index_str_num;
     
     int index_pos = 0;
 
-    // adicionar o registro no indice
+    // lê o cabeçalho do arquivo de dados
+    header = dataHeaderRead(data_file);
+    headerSetStatus(header, '0');
+    dataHeaderWrite(data_file, header, 0);
 
-    { // abre o bin header
-        header = binHeaderRead(binary_file);
-        if (headerGetStatus(header) == '0') {
-            fileClose(binary_file);
-            fileClose(index_file);
-            errorFile();
-        }
+    // lê o cabeçalho do arquivo de indice
+    index_header = indexHeaderRead(index_file);
+    indexHeaderSetStatus(index_header, '0');
+    indexHeaderWrite(index_file, index_header, 0);
 
-        headerSetStatus(header, '0');
-    }
-
-    { // abre o index header
-        index_header = indexHeaderRead(index_file);
-        if (indexHeaderGetStatus(index_header) == '0') {
-            free(header);
-            fileClose(binary_file);
-            fileClose(index_file);
-            errorFile();
-        }
-
-        indexHeaderSetStatus(index_header, '0');
-        printf("size indice: %d\n", indexHeaderGetNum(index_header));
-    }
-
-
+    // le novo data
     data = dataRead(size_array);
-    dataPrintCsvStyle(data);
-    putchar('\n');
-    
+
     offset = headerGetOffset(header);
-    int size = indexHeaderGetNum(index_header);
+    index_str_num = indexHeaderGetNum(index_header);
 
-    dataBinaryWrite(binary_file, data, size_array, offset);
-    // printf("ch: %d\n", DATA_BASE_SIZE + size_array[0] + size_array[1]);
+    // escreve novo data
+    dataBinaryWrite(data_file, data, size_array, offset);
 
-    { // atualiza e escreve o bin header
-        // printf("header: %c %ld %d %d\n", headerGetStatus(header), headerGetOffset(header), headerGetStructNum(header),headerGetRemStructNum(header));
-        headerSetStructNum(header, headerGetStructNum(header) + 1);
 
-        headerSetOffset(header, headerGetOffset(header) + DATA_BASE_SIZE + size_array[0] + size_array[1]);
-    
-        headerSetStatus(header, '1');
+    // atualiza bin header
+    headerSetStructNum(header, headerGetStructNum(header) + 1);
+    headerSetOffset(header, headerGetOffset(header) + dataGetSize(data));
+    headerSetStatus(header, '1');
+    dataHeaderWrite(data_file, header, 0);
 
-        // printf("header: %c %ld %d %d\n", headerGetStatus(header), headerGetOffset(header), headerGetStructNum(header),headerGetRemStructNum(header));
-        binHeaderBinaryWrite(binary_file, header);
-    }
-    
-    // node a ser inserido
-    Index_Data_t* new_node_data = indexDataCreate();
+
+    // cria o data do novo nó
+    Index_Data* new_node_data = indexDataCreate();
     indexDataSetOffset(new_node_data, offset);
-    
-    Index_Node_t** node_array = indexArrayCreate(size);
+
+    // array da leituro do indice 
+    Index_Node** node_array = indexArrayCreate(index_str_num);
     int unique_node_num;
     char index_checker = 1;
-    // isso aqui é modularizavel,  n?
-    if(index_parameter <= 1){
-        dataIndexArrayIntRead(index_file, node_array, size, &unique_node_num);
+
+    // virifica se já existe um registro como mesmo indice
+    if(index_parameter <= 1){ // parametro do indice é inteiro
+        // lê o indice e o coloca no array de nodes
+        dataIndexArrayIntRead(index_file, node_array, index_str_num, &unique_node_num);
+
+        // verifica se o valor lido do parametro do indíce não é nulo
         int field_val = dataGetIntField(data, index_parameter);
         if(field_val == -1){
             index_checker = 0;
-            unique_node_num--;
         }
         indexDataSetIntKey(new_node_data, field_val);
+
+        // busca se esse valor já existe no indice
         index_pos = binarySearchIndexInt(node_array, 0, unique_node_num - 1, field_val);
     }
-    else{
-        dataIndexArrayStrRead(index_file, node_array, size, &unique_node_num);
+    else{ // parametro do indice é string
+        // lê o indice e o coloca no array de nodes
+        dataIndexArrayStrRead(index_file, node_array, index_str_num, &unique_node_num);
+        
+        // verifica se o valor lido do parametro do indíce não é nulo
         char * field_val = dataGetStrField(data, index_parameter);
         if(field_val == NULL){
             index_checker = 0;
-            unique_node_num--;
         }
         indexDataSetStrKey(new_node_data, field_val);
+        
+        // busca se esse valor já existe no indice
         index_pos = binarySearchIndexStr(node_array, 0, unique_node_num - 1, field_val);
     }
 
-
-    // verificar melhor se o valor do ngc do indice n é -1
-    Index_Node_t* new_node = indexNodeCreate(new_node_data);
-
-    printf("idx pos: %d\n idx_chk: %d\n", index_pos, (int)index_checker);
-
+    // verifica se o parametro de indice recebido é nulo
     if(index_checker == 1){
         
-        { // atualiza e escreve o index header
-            // printf("header: %c %d\n", indexHeaderGetStatus(index_header), indexHeaderGetNum(index_header));
+        // cria um novo nó de indice a partir dos dados recebidos
+        Index_Node* new_node = indexNodeCreate(new_node_data);
 
-            indexHeaderSetNum(index_header, indexHeaderGetNum(index_header) + 1);
+        // atualiza e escreve o index header
+        indexHeaderSetNum(index_header, indexHeaderGetNum(index_header) + 1);
+        indexHeaderSetStatus(index_header, '1');
+        indexHeaderWrite(index_file, index_header, 0);
 
-            indexHeaderSetStatus(index_header, '1');
-
-            // printf("header: %c %d\n", indexHeaderGetStatus(index_header), indexHeaderGetNum(index_header));
-            indexHeaderWrite(index_file, index_header);
-        }
-
+        // se o valor ainda não existe no indice criamos ele
         if(index_pos == -1){
-            if(unique_node_num < size){
+            // se há espaço no vetor apenas colocamos ele lá
+            if(unique_node_num < index_str_num){
                 node_array[unique_node_num] = new_node;
                 unique_node_num++;
             }
+            // senão realocamos o vetor aumentandos seu espaço
             else{
-                node_array = realloc(node_array, (++size) * sizeof(Index_Node_t *));
+                node_array = realloc(node_array, (++index_str_num) * sizeof(Index_Node *));
                 if(node_array == NULL){
-                    indexArrayDestroy(node_array, size, unique_node_num);
+                    indexArrayDestroy(node_array, index_str_num, unique_node_num);
                     dataDestroy(data);
                     free(header);
                     free(index_header);
-                    fileClose(binary_file);
+                    fileClose(data_file);
                     fileClose(index_file);
                 }
                 unique_node_num++;
-                node_array[size - 1] = new_node;
+                node_array[index_str_num - 1] = new_node;
             }
 
         }
+        // se valor existe no indice colocamos ele no fim da lista ligada 
         else{
-            Index_Node_t* node = node_array[index_pos];
+            Index_Node* node = node_array[index_pos];
 
             while(indexNodeGetNext(node) != NULL){
                 node = indexNodeGetNext(node);
@@ -859,18 +362,23 @@ char insertIntoBinaryFile(char* filename, char* index_file_name, int index_param
             indexNodeStackData(node, new_node);
         }
 
+        // por fim ordenamos e escrevemos o indice
         dataIndexArraySort(node_array, unique_node_num, index_parameter);
-
-        dataIndexArrayWrite(index_file, node_array, unique_node_num);
+        dataIndexArrayWrite(index_file, node_array, unique_node_num, index_parameter);
+    }
+    else{  // se for nulo apenas fechamos o cabeçalho do indice
+        
+        // atualiza e escreve o index header
+        indexHeaderSetStatus(index_header, '1');
+        indexHeaderWrite(index_file, index_header, 0);
+        
+        indexDataDestroy(new_node_data);
     }
 
-    indexArrayDestroy(node_array, size, unique_node_num);
+    indexArrayDestroy(node_array, index_str_num, unique_node_num);
     dataDestroy(data);
-    free(header);
     free(index_header);
-    fileClose(binary_file);
+    free(header);
+    fileClose(data_file);
     fileClose(index_file);
-
-    //mudar isso
-    return 0;
 }

@@ -6,62 +6,100 @@
 #include <sys/types.h>
 #include <aux.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
 /**
- * @brief reads a fixed size string from a file
- * (the return type is void because the fixed string
- * is already allocated, so we don't need to malloc this
- * string in the function)
+ * @brief lê uma string de tamanho fixo de um csv
  *
- * @param csv_file file in which the string is being read
- * @param str string being filled
- * @param strlen length of the string being read
+ * @param csv_file 
+ * @param str string sendo lida
+ * @param strlen tamanho maximo da string sendo lida
  */
-char* readCsvConstString(FILE* csv_file, int strlen);
-char* readConstString(int strlen);
+void readCsvConstString(FILE* csv_file, char* str, int strlen);
 
 /**
- * @brief reads a variable sized string from a file
+ * @brief lê uma string de tamanho variável de um csv
  *
- * @param csv_file file in which the string is being read
- * @param strlen size of the string
- * @return char* string that was read
+ * @param csv_file 
+ * @param strlen tamanho da string
+ * @return string lida
  */
 char* readCsvVarString(FILE* csv_file, int* strlen);
-char* readVarString(int* strlen);
 
 /**
- * @brief reads an integer from the CSV file, it the field is empty
- * then the integer is default to -1
+ * @brief lê um inteiro do csv, caso seja nulo retorna -1
  *
- * @param csv_file file being read
- * @return int integer that was read
+ * @param csv_file 
+ * @return int lido
  */
 int readCsvInt(FILE* csv_file);
+
+/**
+ * @brief lê um inteiro da entrada padrão
+ * 
+ * @return int lido
+ */
 int readInt();
 
 /**
- * @brief prints a fixed-size string
- *
- * @param str string that will be printed
- * @param strlen length of the string
+ * @brief imprime uma strinf de tamanho fixo (pré definido)
+ * 
+ * @param str string a ser impressa
+ * @param strlen tamanho da string
  */
 void printConstString(char* str, int strlen);
 
 /**
- * @brief reads a string that has variable length, then identifies its end and changes the delimiter for a '\0'
- *
- * @param str
- * @return char* returns the modified string
+ * @brief lê uma string de tamanho fixo do stdin
+ * 
+ * @param strlen tamanho máximo da string
+ * @return string lida
  */
-char* readBinaryVarString(FILE* bin_file);
+char* readConstString(int strlen);
 
-Index_Data_t* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists);
+/**
+ * @brief lê uma string variável de um arquivo binário
+ *
+ * @param data_file
+ * @return string lida
+ */
+char* readBinaryVarString(FILE* data_file);
 
-void printField(char* str, int64_t offset, int key, int parameter);
+/**
+ * @brief lê uma string de tamanho variábel do stdin
+ * 
+ * @param strlen 
+ * @return char* 
+ */
+char* readVarString(int* strlen);
 
-void readFieldStdin(Index_Data_t* array_elem, int parameter);
+/**
+ * @brief lê um campo de um arquivo binário
+ * 
+ * @param file arquivo binário sendo lido
+ * @param parameter parametro para diferenciar o campo
+ * @param offset offset para o tamanho do campo lido
+ * @param exists 1 caso o campo exista, 0 c.c.
+ * @return struct de índice sendo lida
+ */
+Index_Data* readBinaryField(FILE* file, int parameter, int64_t *offset, char* exists);
+
+/**
+ * @brief lê um campo do stdin
+ * 
+ * @param array_elem struct de parametro a ser preenchido
+ * @param parameter  parametro para diferenciar o campo lido
+ */
+void readFieldStdin(Parameter_Hold* array_elem, int parameter, int size);
+
+/**
+ * @brief lê um campo do stdin em formato para escrita em binário (com '$' e '|' onde necessário)
+ * 
+ * @param elem elemento que guarda o valor do campo lido
+ * @param param parametro para diferenciar os campos
+ */
+void readFieldBinStdin(Parameter_Hold* elem, int param);
 
 #endif // !INPUT_OUTPUT_H_

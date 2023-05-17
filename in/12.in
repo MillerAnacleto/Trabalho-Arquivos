@@ -1,4 +1,4 @@
-7 binario12.bin dataCrime string indice12.bin 5
+7 bin/binario12.bin dataCrime string bin/indice12.bin 5
 
 1 lugarCrime "SAO PAULO"
 1 lugarCrime "SAO CARLOS"

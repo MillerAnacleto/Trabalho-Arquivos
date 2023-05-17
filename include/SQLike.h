@@ -2,6 +2,9 @@
 #define SQLIKE_H_
 #include <stdio.h>
 
+#define MAX_FILE_NAME 30
+
+
 void SQLCreateTable();      //f1
 void SQLSelectFrom();       //f2
 void SQLCreateIndex();      //f3

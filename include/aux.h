@@ -4,123 +4,156 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <aux.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
+#define TRUE 1
+#define FALSE 0
+#define EMPTY_INT_FIELD -1
+// #define char bool
+
+typedef char bool;
+
+char* copyVarStr(char* str1);
+
 /**
- * @brief displays file error message and exits
- * with code 1
+ * @brief erro caso o arquivo esteja inconsistente
  *
  */
 void errorFile();
 
 /**
- * @brief displays register error message and exits
+ * @brief erro caso o registro esteja inconsistente
  * 
  */
 void errorReg();
 
 /**
- * @brief opens a file in text read mode
- * and treats the exception in case the file
- * doesn't exists
+ * @brief abre um arquivo no modo de leitura textual
  *
- * @param file_name file name
- * @return FILE* returns the archieve pointer
+ * @param file_name nome do arquivo
+ * @return ponteiro para o arquivo aberto
  */
 FILE* csvFileOpen(char* file_name);
 
 /**
- * @brief opens a file in binary write mode
- * or creates a file in case it doesn't exist
+ * @brief abre um arquivo no modo de leitura binária
  *
- * @param file_name file to be opened
- * @return FILE* returns the file to the pointer
+ * @param file_name nome do arquivo
+ * @return ponteiro para o arquivo 
  */
 FILE* binaryFileOpenWrite(char* file_name);
 
 /**
- * @brief opens a binary file in read mode
+ * @brief abre um arquivo binário no modo de leitura
  *
- * @param file_name name of the file that will be read
- * @return the address to the file
+ * nome do arquivo
+ * @return ponteiro para o arquivo
  */
 FILE* binaryFileOpenRead(char* file_name);
 
 /**
- * @brief opens a binary file in read and write mode
- *
- * @param file_name name of the file that will be read
- * @return the address to the file
+ * @brief abre um arquivo para leitura e escrita binária
+ * 
+ * @param file_name nome do arquivo
+ * @return ponteiro para o arquivo
  */
 FILE* binaryFileOpenReadWrite(char* file_name);
 
 /**
- * @brief opens a binary file in append mode
+ * @brief verifica se o arquivo chegou ao fim
  *
- * @param file_name name of the file that will be read
- * @return the address to the file
+ * @param return_value caso seja 1 verifica se o arquivo acabou, se não
+ * exibe a mensagem de erro. 
+ *
+ * @param file arquivo sendo verificado
+ * @return retorna TRUE se o arquivo acabou, FALSE c.c.
  */
-FILE* binaryFileOpenAppend(char* file_name);
+bool endFileAssert(char return_value, FILE* file);
 
 /**
- * @brief asserts if the file has ended in case return_value is 0
- *
- * @param return_value value returned from the functions that read files
- * (fread, fscanf, ...). In case this value is 0, either the file has
- * ended (in which case the return value is 1), or there was a reading error,
- * then the errorFile() function is invoked, displaying the error message.
- * Otherwise it returns 0
- *
- * @param file file being read
- * @return char returns 1 if the file has ended, 0 otherwise.
+ * @brief verifica se o arquivo Csv acabou após uma '\n' ou '\r'
+ * consumindo esses caracteres redundates.
+ * 
+ * @param file arquivo sendo verificado
+ * @return retorna TRUE se o arquivo acabou, FALSE c.c.
  */
-char endFileAssert(int return_value, FILE* file);
+bool endFileChecker(FILE* file);
 
 /**
- * @brief verifies the end of file after a csv line has been read,
- * consuming '\n' and '\r'
- *
- * @param file file being verified
- * @return char if the file has ended returns 1, otherwise 0
- */
-char endFileChecker(FILE* file);
-
-/**
- * @brief consumes the first line of the csv file
+ * @brief consome a primeira linha do arquivo csv
  * 
  */
 void consumeFirstLine(FILE* csv_file);
 
-// closes a file
+// fecha um arquivo
 void fileClose(FILE* file);
 
 /**
- * @brief verifies if the strings that have constant length are NULL or not
+ * @brief verifica se uma string constante é nula
  *
- * @param str string that will be verified
- * @return 1 if it is NULL 0 if it is not
+ * @param str string sendo verificada
+ * @return 1 se é nula, 0 c.c.
  */
 int isConstStringNull(char* str);
 
+/**
+ * @brief calcula o tamanho de uma string variável
+ * 
+ * @param str string
+ * @return tamanho da string
+ */
 int varStrTell(char* str);
 
-int varStrSize(Bin_Data_t* data);
-
+/**
+ * @brief mapeia cada parâmetro de entrada (string) com um inteiro 
+ * para facilitar as comparações e passagem entre funções
+ * 
+ * @return o inteiro equivalente a string
+ */
 int searchParameter();
 
+/**
+ * @brief copia uma string constante de 12 caracteres ou menos
+ * 
+ * @param str1 string sendo copiada
+ * @return cópia da string
+ */
 char* copyConstVarStr(char* str1);
 
-char* readQuote12();
+/**
+ * @brief lê uma string entre aspas
+ * 
+ * @param size seta o tamanho da string lida
+ * @return string lida
+ */
+char* readQuoteSize(int *size);
 
+/**
+ * @brief recebe uma string e seu tamanho máximo
+ * reduz a string a esse tamanho ou coloca '$' até 
+ * atingir esse tamanho 
+ * 
+ * @param str string a ser tratada
+ * @param max_size tamanho final da string
+ * @param str_size tamanho atual da string
+ * @return string modificada
+ */
+char* stringPadding(char* str, int max_size, int str_size);
+
+/**
+ * @brief compara duas strings de tamanho fixo
+ * 
+ * @param str1 primeira string
+ * @param str2 sgunda string
+ * @param size tamanho das strings
+ * @return 0 se iguais, < 0 se str1 < str2, > 0 se str1 > str2
+ */
 int stringnCmp(char* str1, char* str2, int size);
 
-int64_t* offsetArrayCreate();
-int64_t*  offsetArrayInsert(int64_t* array, int64_t offset);
-
-// given function to produce an output based on the header that was written
+// função dada para conferir valores
 void binarioNaTela(char* nomeArquivoBinario);
 
 #endif // !AUX_H_
