@@ -143,7 +143,7 @@ int binarySearchIndexStr(Index_Node** index, int beg, int end, char* str);
  * é necessário ir até a posição do offset e recuperar o registro de dados inteiro
  * @param parameter_num número de parâmetros sendo comparado
  * @param fnt ponteiro para a função que executa quando um registro é encontrado
- * @return returns the offset array
+ * @return numero de itens encontrados
  */
 int nodeListCompare(Index_Node* node, Parameter_Hold** array,
     FILE* data_file, int parameter_num, Parameter_Hold** (*fnt)(fntptr));
@@ -170,7 +170,7 @@ int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** a
  * @param array vetor de parâmetros passados
  * @param array_size número de parâmetros (tamanho do vetor)
  * @param fnt ponteiro de função para o que deve ser executado quando a busca tem sucessp
- * @return offset array
+ * @return numero de itens encontrados
  */
 int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
     Parameter_Hold** (*fnt) (fntptr));
