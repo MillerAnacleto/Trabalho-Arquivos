@@ -93,6 +93,7 @@ Index_Data* indexDataReadStr(FILE* index){
 
 void dataIndexArrayIntRead(FILE* index, Index_Node** array, int size, int* diff_node_num){
 
+    
     int curr_pos = 0;
     int last_val = 0;
     int curr_val = 0;

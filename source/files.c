@@ -191,8 +191,6 @@ Index_Node** fileIndexRead(char* index_filename, int parameter ){
     return array;
 }
 
-
-
 int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter, 
     Parameter_Hold** (*fnt)(fntptr)){
 
@@ -310,11 +308,14 @@ void insertIntoBinaryFile(char* filename, char* index_file_name, int index_param
         char * field_val = dataGetStrField(data, index_parameter);
         if(field_val == NULL){
             index_checker = 0;
+            free(field_val);
         }
-        indexDataSetStrKey(new_node_data, field_val);
-        
-        // busca se esse valor já existe no indice
-        index_pos = binarySearchIndexStr(node_array, 0, unique_node_num - 1, field_val);
+        else{
+            indexDataSetStrKey(new_node_data, field_val);
+            // busca se esse valor já existe no indice
+            index_pos = binarySearchIndexStr(node_array, 0, unique_node_num - 1, field_val);
+            free(field_val);
+        }
     }
 
     // verifica se o parametro de indice recebido é nulo

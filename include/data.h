@@ -175,7 +175,6 @@ int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** a
 int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
     Parameter_Hold** (*fnt) (fntptr));
 
-
 /**
  * @brief função para imprimir na tela o registro de dados 
  * 

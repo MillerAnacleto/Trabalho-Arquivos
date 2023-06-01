@@ -181,7 +181,7 @@ void SQLUpdateSetWhere(){
     char consume[MAX_FILE_NAME];
     int index_parameter;
     int search_num = 0;
-    
+    char any_found = 0;
 
     checker = scanf("%s", read_file_name);
     if (checker == 0) {
@@ -209,9 +209,14 @@ void SQLUpdateSetWhere(){
             scanf("%c", &c);
             scanf("%[^\n]s", str);
         }
+        else any_found = 1;
     }
 
     binarioNaTela(read_file_name);
     int64_t offset = 0;
-    fileIndexCreate(read_file_name, index_file_name, index_parameter, &offset);
+ 
+    if(any_found)
+        fileIndexCreate(read_file_name, index_file_name, index_parameter, &offset);
+    else    
+        binarioNaTela(index_file_name);
 }

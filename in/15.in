@@ -1,0 +1,8 @@
+4 bin/binario15.bin idCrime inteiro bin/indice15.bin 6
+1 lugarCrime "SUZANO"
+2 idCrime 925 marcaCelular "IPHONE"
+2 dataCrime "01/01/2020" numeroArtigo 171
+1 descricaoCrime "FURTO (ART. 188) - TRANSEUNTE"
+2 idCrime 275 marcaCelular "IPHONE"
+1 numeroArtigo 171 marcaCelular "SAMSUNG"
+

@@ -247,11 +247,11 @@ char* dataGetStrField(Data_Register* data, int param){
         break;    
 
     case 3:
-        str = copyConstVarStr(dataGetDescription(data));
+        str = copyVarStr(dataGetDescription(data));
         break;
 
     case 4:
-        str = copyConstVarStr(dataGetPlace(data));
+        str = copyVarStr(dataGetPlace(data));
         break;
 
     case 5:
@@ -295,7 +295,6 @@ void dataSetStrField(Data_Register* data, char* str, int param){
         str1 = dataGetDescription(data);
         free(str1);
         str1 = copyVarStr(str);
-        //free(dataGetDescription(data));
         (dataSetDescription(data, str1));
         break;
 
@@ -331,16 +330,35 @@ bool dataParamCompare(Data_Register* bin_data, Parameter_Hold** parameter_array,
             }
         }
         else{
+
             char* str1 = dataGetStrField(bin_data, param);
             char* str2 = paramHoldGetStrKey(parameter_array[i]);
-    
+
             if(str1 == NULL || str2 == NULL) return 0;
+
+            int tam = paramHoldGetIntKey(parameter_array[i]);
             
-            for(int j = 0; j < STR_SIZE; j++){
-                if(str1[j] != str2[j]){
-                    free(str1);
-                    return FALSE;
+            if(param == 2 || param == 5){
+                for(int j = 0; j < STR_SIZE; j++){
+                    if(str1[j] != str2[j]){
+                        free(str1);
+                        return FALSE;
+                    }
                 }
+            } else{
+                int j = 0;
+
+                while(str1[j] != '|' && str2[j] != '|' && str2[j] != '\0' && str1[j] != '\0'
+                 && str2[j] != '$' && str1[j] != '$'){
+                    if(str1[j] == str2[j]){
+                        j++;
+
+                    }
+                    else{
+                        free(str1);
+                        return FALSE;
+                    } 
+                }  
             }
             free(str1);
         }
@@ -439,6 +457,16 @@ int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** a
 
     int size = indexHeaderGetNum(header);
 
+    if(size == 0){
+        
+        indexHeaderSetStatus(header, '1');
+        indexHeaderWrite(index_file, header, 0);
+        
+        free(header);
+
+        return 0;
+    }
+
     int node_num = 0;
     int diff_node_num = 0;
     int index_pos = 0;
@@ -468,7 +496,7 @@ int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** a
 
     indexArrayDestroy(node_array, size, diff_node_num);
     
-    //reescrevemos o header do arq de indice com status '0'
+    //reescrevemos o header do arq de indice com status '1'
     indexHeaderSetStatus(header, '1');
     indexHeaderWrite(index_file, header, 0);
     
