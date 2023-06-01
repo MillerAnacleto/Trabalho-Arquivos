@@ -9,6 +9,51 @@
 #include <data.h>
 #include <structs.h>
 
+//--------------------------- structs para arquivo ---------------------------//
+struct file_container_{
+
+    FILE* file;
+    int64_t ptr_pos;
+    int64_t max_offset;
+};
+
+File_Container* fileContainerCreate(){
+    
+    File_Container* file_cont = malloc(sizeof(File_Container));
+    file_cont->file = NULL;
+    file_cont->ptr_pos = 0;
+    file_cont->max_offset = 0;
+
+    return file_cont;
+}
+
+FILE* fileContainerGetFile(File_Container* file_cont){
+    return file_cont->file;
+}
+
+void fileContainerSetFile(File_Container* file_cont, FILE* file){
+    file_cont->file = file;
+}
+
+
+int64_t fileContainerGetPtrPos(File_Container* file_cont){
+    return file_cont->ptr_pos;
+}
+
+void fileContainerSetPtrPos(File_Container* file_cont, int64_t ptr_pos){
+    file_cont->ptr_pos = ptr_pos;
+}
+
+
+int64_t fileContainerGetOffset(File_Container* file_cont){
+    return file_cont->max_offset;
+}
+
+void fileContainerSetOffset(File_Container* file_cont, int64_t max_offset){
+    file_cont->max_offset = max_offset;
+}
+
+
 //----------------------- structs para arquivo índicie -----------------------//
 
 struct index_header_{

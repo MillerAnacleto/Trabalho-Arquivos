@@ -195,7 +195,10 @@ Index_Data* readBinaryField(FILE* file, int parameter, int64_t *offset, char* ex
     else{
         str = dataGetStrField(data, parameter);
         if(str != NULL){
+            int size = 0;
+            while(str[size] != '|' && str[size] != '\0' && str[size] != '$') size++;
             if(str[0] != '$' && str[0] != '|'){
+                str = stringPadding(str, STR_SIZE, size);
                 indexDataSetStrKey(idx_data, str); 
                 free(str);          
             }
@@ -214,6 +217,7 @@ Index_Data* readBinaryField(FILE* file, int parameter, int64_t *offset, char* ex
 }
 
 void readFieldStdin(Parameter_Hold* array_elem, int parameter, int size){
+
     if(parameter <= 1){
         int key;
         scanf("%d", &key);
@@ -226,12 +230,13 @@ void readFieldStdin(Parameter_Hold* array_elem, int parameter, int size){
             str = stringPadding(str, STR_SIZE, str_size);
             paramHoldSetIntKey(array_elem, STR_SIZE);
 
-        }else if(size){
-           str = stringPadding(str, size, str_size);
-           paramHoldSetIntKey(array_elem, size);
+        }else if(str_size < STR_SIZE){
+           str = stringPadding(str, STR_SIZE, str_size);
+           paramHoldSetIntKey(array_elem, STR_SIZE);
         }
 
         else{
+            str = stringPadding(str, str_size+1, str_size);
             paramHoldSetIntKey(array_elem, str_size);
         }
          

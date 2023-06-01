@@ -15,6 +15,21 @@
 #define STR_SIZE 12
 
 //os blocos seguem a lógica: alocadores, get/set, desalocadores
+//--------------------------- structs para arquivo ---------------------------//
+
+typedef struct file_container_ File_Container;
+
+File_Container* fileContainerCreate();
+
+FILE* fileContainerGetFile(File_Container* file_cont);
+void fileContainerSetFile(File_Container* file_cont, FILE* file);
+
+int64_t fileContainerGetPtrPos(File_Container* file_cont);
+void fileContainerSetPtrPos(File_Container* file_cont, int64_t ptr_pos);
+
+int64_t fileContainerGetOffset(File_Container* file_cont);
+void fileContainerSetOffset(File_Container* file_cont, int64_t max_offset);
+
 //----------------------- structs para arquivo índicie -----------------------//
 
 typedef struct index_header_ Index_Header;

@@ -1,0 +1,7 @@
+5 binario17.bin marcaCelular string indice17.bin 6
+5 idCrime 48 dataCrime "27/11/2021" numeroArtigo 155 marcaCelular "MOTOROLA" lugarCrime "SAO PAULO"
+2 idCrime 7 dataCrime "30/11/1999"
+2 idCrime 7 dataCrime "30/11/2018"
+2 marcaCelular "SAMSUNG" lugarCrime "GUARULHOS"
+1 marcaCelular "NOKIA"
+1 idCrime 1330

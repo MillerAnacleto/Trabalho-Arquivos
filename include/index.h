@@ -10,7 +10,6 @@
 #include <input_output.h>
 #include <structs.h>
 
-typedef int banana;
 
 /**
  * @brief ordena um vetor de ponteiros para registros de índice

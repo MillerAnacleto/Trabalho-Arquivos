@@ -1,0 +1,7 @@
+7 bin/binario20.bin descricaoCrime string bin/indice20.bin 2
+
+2 descricaoCrime "ROUBO (ART. 157) - OUTROS" dataCrime "28/02/2021"
+1 lugarCrime "CAMPINAS"
+
+2 descricaoCrime "ROUBO (ART. 157) - INTERIOR ESTABELECIMENTO" dataCrime "28/02/2021"
+1 lugarCrime "SANCATHON"

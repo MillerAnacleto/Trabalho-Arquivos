@@ -216,7 +216,7 @@ char* readQuoteSize(int *size){
     }
 
     scanf("%c", &read);
-    while( read != dq){
+    while(read != dq){
         str[*size] = read;
         *size += 1;
         scanf("%c", &read);
