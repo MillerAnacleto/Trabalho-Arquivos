@@ -2,8 +2,16 @@
 #include <stdlib.h>
 #include <aux.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
+ 
+
+#define TRUE 1
+#define FALSE 0
+
+typedef char bool;
+
 
 void errorFile() {
     printf("Falha no processamento do arquivo.\n");
@@ -15,32 +23,33 @@ void errorReg() {
     exit(0);
 }
 
-char endFileAssert(int return_value, FILE* file) {
+bool endFileAssert(char return_value, FILE* file) {
     if (return_value == 0) {
         if (feof(file)) {
-            return 1;
+            return TRUE;
         }
         errorFile();
     }
 
-    return 0;
+    return FALSE;
 }
 
-char endFileChecker(FILE* file) {
+bool endFileChecker(FILE* file) {
+    
     char read = '\0';
-    int checker;
+    char checker;
     checker = fread(&read, sizeof(char), 1, file);
     endFileAssert(checker, file);
 
     while (read == '\n' || read == '\r') {
         checker = fread(&read, sizeof(char), 1, file);
         if (endFileAssert(checker, file)) {
-            return 1;
+            return TRUE;
         }
     }
 
     ungetc(read, file);
-    return 0;
+    return FALSE;
 }
 
 void consumeFirstLine(FILE* csv_file) {
@@ -67,36 +76,33 @@ FILE* csvFileOpen(char* file_name) {
 }
 
 FILE* binaryFileOpenWrite(char* file_name) {
-    FILE* binary_file = fopen(file_name, "wb");
-    if (binary_file == NULL) {
-        errorFile();
-    }
-    return binary_file;
+    FILE* data_file = fopen(file_name, "wb");
+
+    return data_file;
 }
 
 FILE* binaryFileOpenRead(char* file_name) {
-    FILE* binary_file = fopen(file_name, "rb");
-    if (binary_file == NULL) {
+    FILE* data_file = fopen(file_name, "rb");
+    if (data_file == NULL) {
         errorFile();
     }
-    return binary_file;
-}
-
-//apagar
-FILE* binaryFileOpenAppend(char* file_name) {
-    FILE* binary_file = fopen(file_name, "a+b");
-    if (binary_file == NULL) {
-        errorFile();
-    }
-    return binary_file;
+    return data_file;
 }
 
 FILE* binaryFileOpenReadWrite(char* file_name){
-    FILE* binary_file = fopen(file_name, "r+b");
-    if (binary_file == NULL) {
+    FILE* data_file = fopen(file_name, "r+b");
+    if (data_file == NULL) {
         errorFile();
     }
-    return binary_file;
+    return data_file;
+}
+
+FILE* binaryFileOpenReadWriteC(char* file_name){
+    FILE* data_file = fopen(file_name, "w+b");
+    if (data_file == NULL) {
+        errorFile();
+    }
+    return data_file;
 }
 
 int isConstStringNull(char* str) {
@@ -135,37 +141,33 @@ int varStrTell(char* str){
     return size+1;
 }
 
-int varStrSize(Bin_Data_t* data){
-    
-    int total_size = varStrTell(dataGetPlace(data));
-    total_size += varStrTell(dataGetDescription(data));
-    
-    return total_size;
-}
-
 int searchParameter(){
-    char field_name[20];
     
-
+    char field_name[20];
     scanf("%s", field_name);
 
+    //Precisamos analizar apenas as 2 primeiras letras:
+    /*
+    * idCrime, numeroArtigo, dataCrime, descricaoCrime, lugarCrime, marcaCelular
+    * apenas dois termos correspondem a mais do que a primeira letra (data e descricao).
+    */
     switch (field_name[0]){ 
-    case 'i':   //id
+    case 'i':   //idCrime
         return 0;
 
-    case 'n':   //article_number
+    case 'n':   //numeroArtigo
         return 1;
     
-    case 'd':   //crime_description
-        if(field_name[1] == 'a'){   //crime_date
-            return 2;
+    case 'd':   
+        if(field_name[1] == 'a'){   
+            return 2;//dataCrime
         }
-        return 3;
+        return 3;//descricaoCrime
         
-    case 'l':   //place
+    case 'l':   //lugarCrime
         return 4;
 
-    case 'm':   //brand
+    case 'm':   //marcaCelular
         return 5;
 
     default:
@@ -189,42 +191,68 @@ char* copyConstVarStr(char* str1){
         str2[i] = '$';
         i++;
     }
-
+    
     return str2;
 }
 
-char* readQuote12(){
+char* copyVarStr(char* str1){
 
-    char* str = malloc(12*sizeof(char));
-    int size = 0;
+    int max = 10;
+    if(str1 == NULL || str1[0] == '|' || str1[0] == '$') return NULL;
+    int i = 0;
+    char* str2 = malloc(max*sizeof(char));
+
+    while(str1[i] != '|' && str1[i] != '$' && str1[i] != '\0'){
+        str2[i] = str1[i];
+        i++;
+        if(i >= max-1){
+            max *= 2;
+            str2 = realloc(str2, max*sizeof(char));
+        }
+    }
+    str2[i] = '|';
+    
+    return str2;
+}
+
+char* readQuoteSize(int *size){
+
+    int max = STR_SIZE;
+    char* str = malloc(STR_SIZE*sizeof(char));
+    *size = 0;
     char read = '\0';
-    scanf("%c", &read);
     char dq = '"';
+
+    scanf("%c", &read);
     while(read != dq){
         scanf("%c", &read);
     }
 
     scanf("%c", &read);
-    
-    while(size < 12 && read != dq){
-        str[size] = read;
-        size++;
+    while(read != dq){
+        str[*size] = read;
+        *size += 1;
         scanf("%c", &read);
-    }
-    if(size < 12){
-        while(size < 12){
-            str[size] = '$';
-            size++;
+        
+        if(*size == max-2){
+            max *= 2;
+            str = realloc(str, max*sizeof(char));
         }
     }
-    else{
-        while(read != dq){
-            scanf("%c", &read);
-        }
+    
+    return str;
+}
+
+char* stringPadding(char* str, int max_size, int str_size){
+
+    str = realloc(str, (1+max_size)*sizeof(char));
+
+    while(str_size < max_size){
+        str[str_size] = '$';
+        str_size++;
     }
 
     return str;
-
 }
 
 int stringnCmp(char* str1, char* str2, int size){
@@ -235,36 +263,6 @@ int stringnCmp(char* str1, char* str2, int size){
         if(j != 0) return j;
     }
     return 0;
-}
-
-int64_t* offsetArrayCreate(){
-    
-    int64_t* offset_array = calloc(10, sizeof(int64_t));
-    offset_array[0] = -1;
-    return offset_array;
-}
-
-int64_t*  offsetArrayInsert(int64_t* array, int64_t offset){
-    
-    int size = 0;
-    while(array[size] != 0 && array[size] != -1){
-        size++;
-    }
-
-    if(array[size] == -1){
-        array[size] = 0;
-        array = realloc(array, (2*(size+1))*sizeof(int64_t));
-        for(int i = size; i < 2*size; i++){
-            array[i] = 0;
-        }
-
-        if(size == 0) array[1] = -1;
-        array[2*size] = -1;
-    }
-    
-    array[size] = offset;
-    //printf("passou\n");
-    return array;
 }
 
 void binarioNaTela(char* nomeArquivoBinario) {

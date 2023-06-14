@@ -6,66 +6,157 @@
 #include <sys/types.h> //para garantir o tamanho dos campos
 #include <aux.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
+#define fntptr FILE* file, int64_t offset, Data_Register* bin_data, Data_Header* bin_header , Parameter_Hold** param_array, int* param_num
+
 #define DATA_BASE_SIZE 32
-#define HEADER_SIZE 17
+typedef char bool;
 
 /**
- * @brief reads a csv line and saves it into a data struct
+ * @brief lê um registro de dados de um arquivo csv
  *
- * @param csv_file file being read
- * @param size_array keeps the variable strings size, to be summated
- * for calculating the offset byte
+ * @param csv_file arquivo sendo lido
+ * @param size_array array com os tamanhos das strings variáveis (descrição e lugar)
+ * para calcular o byte offset 
  *
- * @return Bin_Data_t* returns the filled data struct
+ * @return a struct Bin_Data preenchida 
  */
-Bin_Data_t* dataCsvRead(FILE* csv_file, int* size_array);
-Bin_Data_t* dataRead(int* size_array);
+Data_Register* dataCsvRead(FILE* csv_file, int* size_array);
 
 /**
- * @brief reads one registry of the file
- *
- * @param bin_file file that will be read
- * @return Bin_Data_t* the data read from the file
+ * @brief lê um registro de dados da entrada padrão
+ * 
+ * @param size_array 
+ * @return a struct Bin_Data preenchida 
  */
-Bin_Data_t* dataBinaryRead(FILE* bin_file);
+Data_Register* dataRead(int* size_array);
 
 /**
- * @brief writes the data struct fields into a file in binary
- * write mode
+ * @brief lê um registro de dados de um arquivo binário
  *
- * @param binary_file file opened in binary write
- * @param data struct from which the filds will be read
- * @param size_array array that keeps the variable strings size, to write
- * exactly the strings size.
- *
- * @return int controls the number of writes to verify if all fields were written
+ * @param data_file o arquivo cuja função é lida
+ * @return a struct Bin_Data preenchida 
  */
-int dataBinaryWrite(FILE* binary_file, Bin_Data_t* data, int* size_array, int64_t offset);
+Data_Register* dataBinaryRead(FILE* data_file);
 
 /**
- * @brief Receives a registry and prints its value following the given rules
+ * @brief escreve o registro de dados em um arquivo
  *
- * @param data data that will be printed
+ * @param data_file arquivo em modo de escrita binária
+ * @param data struct que tem os arquivos lidos
+ * @param size_array vetor que mantém o tamanho das strings variáveis
+ *
+ * @return número de itens escritos corretamente
  */
-void dataPrintCsvStyle(Bin_Data_t* data);
+int dataBinaryWrite(FILE* data_file, Data_Register* data, int* size_array, int64_t offset);
 
-void dataIndexArraySort(Index_Node_t** index_array, int unique_node_num, int parameter);
+/**
+ * @brief imprime um registro de dados no formato csv
+ *
+ * @param data registro a ser impresso
+ */
+void dataPrintCsvStyle(Data_Register* data);
 
-int dataIndexArrayWrite(FILE* index_file, Index_Node_t** index_array, int unique_node_num);
 
-void dataIndexArrayIntRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
 
-void dataIndexArrayStrRead(FILE* index, Index_Node_t** array, int size, int* unique_node_num);
+/**
+ * @brief compara um registro binário com um vetor de parâmetos (cada elemento
+ * do vetor de parâmetros possui um campo).
+ * 
+ * @param bin_data registro binário a ser comparado
+ * @param parameter_array vetor de parâmetros que foram passados da entrada
+ * @param parameter_num numero de parâmetros (tamanho do vetor)
+ * @return TRUE caso o arquivo binário possua todos os campos, FALSE c.c. 
+ */
+bool dataParamCompare(Data_Register* bin_data, Parameter_Hold** parameter_array, int parameter_num);
 
-char dataParamCompare(Bin_Data_t* bin_data, Index_Data_t** array, int array_size);
+/**
+ * @brief retorna o campo inteiro de um registro de dados
+ * 
+ * @param data registro de dados a ter o campo retornado
+ * @param param especificador que determina qual parâmetro é retornado
+ * @return id (param == 0) ou número do artigo (param == 1)
+ */
+int dataGetIntField(Data_Register* data, int param);
 
-int dataGetIntField(Bin_Data_t* data, int param);
+/**
+ * @brief retorna uma string de um registro de dados
+ * 
+ * @param data registro de dados a ter o campo retornado
+ * @param param  specificador que determina qual parâmetro é retornado
+ * @return  data caso param == 2, descrição caso param == 3, 
+ * lugar caso param == 4, marca caso param == 5.
+ */
+char* dataGetStrField(Data_Register* data, int param);
 
-char* dataGetStrField(Bin_Data_t* data, int param);
+/**
+ * @brief seta um campo inteiro de um registro de dados 
+ * 
+ * @param data registro de dados a ter o campo setado
+ * @param field valor do campo
+ * @param param especificador que determina o campo (mesmo das funções acima)
+ */
+void dataSetIntField(Data_Register* data, int field, int param);
 
-void dataMarkDeleted(FILE* binary_file, int64_t offset);
+/**
+ * @brief seta um campo de string de um registro de dados 
+ * 
+ * @param data registro de dados a ter o campo setado
+ * @param str valor do campo
+ * @param param especificador que determina o campo (mesmo das funções acima)
+ */
+void dataSetStrField(Data_Register* data, char* str, int param);
+
+/**
+ * @brief busca binária em um array de índices, encapsula as funções que lidam com 
+ * int e string
+ * 
+ * @param index_file arquivo de índice sendo lido para gerar o array de índice a ser
+ * buscado
+ * @param data_file arquivo de dados a ser lido para a comparação completa entre os parâmetros 
+ * @param array array de parâmetros
+ * @param parameter_num número de parâmetros de busca
+ * @param parameter_index indice do parâmetro que contém o campo indexado no arquivo de índice
+ * @return número de registros encontrados com sucesso
+ */
+int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** array,  
+    int parameter_num, int parameter_index, Parameter_Hold** (*fnt)(fntptr));
+
+/**
+ * @brief faz busca linear num arquivo de dados binário
+ * 
+ * @param file arquivo de dados
+ * @param array vetor de parâmetros passados
+ * @param array_size número de parâmetros (tamanho do vetor)
+ * @param fnt ponteiro de função para o que deve ser executado quando a busca tem sucessp
+ * @return numero de itens encontrados
+ */
+int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
+    Parameter_Hold** (*fnt) (fntptr));
+
+/**
+ * @brief função para imprimir na tela o registro de dados 
+ * 
+ * @return o retorno não é usado nessa função (apenas mantido para que as funções tenham mesma sintaxe)
+ */
+Parameter_Hold** ptrBinDataPrint(fntptr);
+
+/**
+ * @brief preenche um vetor de parâmetros com dados da entrada padrão
+ * 
+ * @param parameter_num número de parâmetros a ser passado (tamanho do vetor)
+ * @param index_parameter valor indexado
+ * @param binary_flag caso o valor indexado tenha o mesmo tipo que o passado como parâmetro
+ * a flag de busca binária de torna 1
+ * @param parameter_index indice do vetor de parâmetros que contém o valor indexado
+ * @return array de parâmetros preenchido
+ */
+Parameter_Hold** parameterArrayRead(int parameter_num, int index_parameter, char* binary_flag,
+    int* parameter_index);
+
+int searchBT(FILE* index_file, FILE* data_file, Parameter_Hold** array, int parameter_num);
 
 #endif // !DATA_H_

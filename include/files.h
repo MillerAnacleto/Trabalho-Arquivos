@@ -5,47 +5,53 @@
 #include <stdlib.h>
 #include <sys/types.h> 
 #include <aux.h>
+#include <data.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
-#define EMPTY_INT_FIELD -1
-
 /**
- * @brief The function reads the header, gets the number of registries in the file, 
- * reads and prints the registries one by one
+ * @brief recupera os registros de um arquivo de dados e os imprime 
  *
- * @param file_name file that will be opened
+ * @param file_name arquivo de dados sendo lido
  */
 void fileBinaryPrintAsCsv(char* file_name);
 
 /**
- * @brief reads a csv file, using the data struct, stores the struct in RAM and
- * writes it to a binary file, one struct at time.
+ * @brief lê um arquivo CSV e escreve num arquivo de dados binário
  *
- * @param csv_file_name csv file to be opened
- * @param binary_file_name binary file to be opened/created
+ * @param csv_file_name nome do csv a ser aberto
+ * @param binary_file_name nome do arquivo de dados
  */
 void fileReadCsvWriteBinary(char* csv_file_name, char* binary_file_name);
 
-void fileIndexCreate(char* binary_file_name, char* index_file_name, int parameter, int64_t *offset);
+/**
+ * @brief cria um arquivo de índice a partir de um arquivo de dados binário
+ * 
+ * @param binary_file_name arquivo de dados cujo indice é construído sobre
+ * @param index_file_name nome do arquivo de índice
+ * @param parameter parametro de indexação
+ * @param offset long que gurada o offset de cada elemento do índice
+ */
+void fileIndexCreate(char* binary_file_name, char* index_file_name, int64_t *offset);
 
-Index_Node_t** fileIndexRead(char* index_filename, int parameter);
+/**
+ * @brief busca um registro num arquivo de dados binário
+ * 
+ * @param filename nome do arquivo de dados no qual ocorrem as buscas
+ * @param index_file_name arquivo de indice
+ * @param index_parameter parametro de indexação
+ * 
+ * @return o número de correspondências na busca
+ */
+int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter, Parameter_Hold** (*fnt) (fntptr) );
 
-int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter);
-int SearchDeleteBinaryFile(char* filename, char* index_file_name, int index_parameter);
-int SearchUpdateBinaryFile(char* filename, char* index_file_name, int index_parameter);
-
-int linearSearchBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size, char print);
-int linearDeleteBinaryFile(FILE* file, Bin_Header_t* header, Index_Data_t** array, int array_size);
-
-int binarySearchIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index);
-int binarySearchDeleteIndexArray(FILE* index_file, FILE* binary_file, Index_Data_t** array,  
-    int parameter_num, int parameter_index);
-
-char insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter);
-
-
+/**
+ * @brief insere um registro no final de um arquivo de dados binário
+ * 
+ * @param filename nome do arquivo de dados 
+ */
+void insertIntoBinaryFile(char* filename, char* index_file_name, int index_parameter);
 
 #endif // !FILES_H_

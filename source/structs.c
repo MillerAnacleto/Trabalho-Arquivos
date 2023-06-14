@@ -4,218 +4,268 @@
 #include <aux.h>
 #include <files.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
+#include <data.h>
 #include <structs.h>
 
-//----------------------- structs para arquivo índicie -----------------------//
+//----------------------- structs para arquivo índice -----------------------//
+
 
 struct index_header_{
     char status;
-    int struct_num;
+    int root_node;
+    int RRN_next_node;
+    int num_keys;
+    int num_levels;
 };
 
-struct index_data_ {
+struct index_key_{
 
-    int int_key;
-    char *str_key;
-
-    union Ints_{
-        int64_t offset;
-        int param;
-    }ints;
+    int id_key;
+    int64_t key_offset;
 };
 
-char indexHeaderGetStatus(Index_Header_t* header){
-    return header->status;
+struct index_bt_page_{
+
+    int rrn;
+    int node_level;
+    int num_keys;
+    Index_Key* search_keys[BT_KEY_NUM];
+    int pointers[BT_ORDER];
+};
+
+Index_Header* indexHeaderCreate(){
+    Index_Header* idx_header = malloc(sizeof(Index_Header));
+    idx_header->status = '0';
+    idx_header->root_node = -1;
+    idx_header->RRN_next_node = 0;
+    idx_header->num_keys = 0;
+    idx_header->num_levels = 0;
+    return idx_header;
 }
 
-void indexHeaderSetStatus(Index_Header_t* header, char status){
-    header->status = status;
-}
-
-int indexHeaderGetNum(Index_Header_t* header){
-    return header->struct_num;
-}
-
-void indexHeaderSetNum(Index_Header_t* header, int num){
-    header->struct_num = num;
-}
-
-int indexDataGetIntKey(Index_Data_t* data){
-    return data->int_key;
-}
-
-void indexDataSetIntKey(Index_Data_t* data, int key){
-    data->int_key = key;
-}
-
-int64_t indexDataGetOffset(Index_Data_t* data){
-    return data->ints.offset;
-}
-
-void indexDataSetOffset(Index_Data_t* data, int64_t offset){
-    data->ints.offset = offset;
-}
-
-char* indexDataGetStrKey(Index_Data_t* data){
-    return data->str_key;
-}
-
-void indexDataSetStrKey(Index_Data_t* data, char* key){
-    data->str_key = key;
-}
-
-void indexDataSetParam(Index_Data_t* data, int param){
-    data->ints.param = param;
-}
-
-int indexDataGetParam(Index_Data_t* data){
-    return data->ints.param; 
-}
-
-Index_Header_t* indexHeaderCreate(){
-    Index_Header_t* header_indx = malloc(sizeof(Index_Header_t));
-    header_indx->status = 1;
-    header_indx->struct_num = 0;
-    return header_indx;
-}
-
-Index_Data_t* indexDataCreate(){
-    Index_Data_t* data = malloc(sizeof(Index_Data_t));
-    data->str_key = NULL;
-    data->ints.offset = EMPTY_INT_FIELD;
-    data->int_key = EMPTY_INT_FIELD;
-
-    return data;
-}
-
-void indexHeaderDestroy(Index_Header_t* index_header){
+void indexHeaderDestroy(Index_Header* index_header){
     free(index_header);
 }
 
-void indexDataDestroy(Index_Data_t* data){
-
-    if(data->str_key != NULL) free(data->str_key);
-    free(data);
+char indexHeaderGetStatus(Index_Header* header){
+    return header->status;
 }
 
-//---------------- estrutura de dados array com lista ligada -----------------//
+void indexHeaderSetStatus(Index_Header* header, char status){
+    header->status = status;
+}
 
-struct index_node_{
+int indexHeaderGetRootNode(Index_Header* header){
+    return header->root_node;
+}
+
+void indexHeaderSetRootNode(Index_Header* header, int RRN){
+    header->root_node = RRN;
+}
+
+int indexHeaderGetRnnNextNode(Index_Header* header){
+    return header->RRN_next_node;
+}
+
+void indexHeaderSetRnnNextNode(Index_Header* header, int RRN){
+    header->RRN_next_node = RRN;
+}
+
+int indexHeaderGetNumKeys(Index_Header* header){
+    return header->num_keys;
+}
+
+void indexHeaderSetNumKeys(Index_Header* header, int num){
+    header->num_keys = num;
+}
+
+int indexHeaderGetNumLevels(Index_Header* header){
+    return header->num_levels;
+}
+
+void indexHeaderSetNumLevels(Index_Header* header, int num){
+    header->num_levels = num;
+}
+
+Index_Key* indexKeyCreate(){
+    Index_Key* new_key = malloc(sizeof(Index_Key));
+    new_key->id_key = -1;
+    new_key->key_offset = -1;
+    return new_key;
+}
+
+void indexKeyDestroy(Index_Key* index_key){
+    free(index_key);
+}
+
+int indexKeyGetId(Index_Key* idx_key){
+    return idx_key->id_key;
+}
+void indexKeySetId(Index_Key* idx_key, int id){
+    idx_key->id_key = id;
+}
+
+int64_t indexKeyGetKeyOffset(Index_Key* idx_key){
+    return idx_key->key_offset ;
+}
+void indexKeySetOffset(Index_Key* idx_key, int64_t offset){
+    idx_key->key_offset = offset;
+}
+
+//bt page
+
+Index_BTPage* indexBTPageCreate(){
+    Index_BTPage* node = malloc(sizeof(Index_BTPage));
     
-    Index_Data_t* data;
-    Index_Node_t* next;
-};
-
-Index_Node_t* indexNodeCreate(Index_Data_t* data){
-    Index_Node_t* node = malloc(sizeof(Index_Node_t));
-    node->data = data;
-    node->next = NULL;
+    node->node_level = -1;
+    node->num_keys = 0;
+    
+    for(int i = 0; i < BT_KEY_NUM; i++){
+        node->search_keys[i] = indexKeyCreate();
+    }
+    
+    for(int i = 0; i < BT_ORDER; i++){
+        node->pointers[i] = -1;
+    }
 
     return node;
 }
 
-Index_Node_t** indexArrayCreate(int node_num){
+void indexBTPageDestroy(Index_BTPage* node){
+    if(node != NULL){
+        for(int i = 0; i < BT_KEY_NUM; i++){
+            indexKeyDestroy(node->search_keys[i]);
+        }
+        free(node);
+    }
+}
 
-    Index_Node_t** array = malloc(node_num*sizeof(Index_Node_t*));
-    
-    for(int i = 0; i < node_num; i++){
-        array[i] = malloc(sizeof(Index_Node_t));
-        array[i]->data = NULL;
-        array[i]->next = NULL;
+int indexBTPageGetRrn(Index_BTPage* idx_page){
+    if(idx_page == NULL) return -1;
+    return idx_page->rrn;
+}
+
+void indexBTPageSetRrn(Index_BTPage* idx_page, int rrn){
+    idx_page->rrn = rrn;
+}
+
+int indexBTPageGetNodeLevel(Index_BTPage* idx_page){
+    return idx_page->node_level;
+}
+
+void indexBTPageSetNodeLevel(Index_BTPage* idx_page, int node_level){
+    idx_page->node_level = node_level;
+}
+
+int indexBTPageGetNumKeys(Index_BTPage* idx_page){
+    return idx_page->num_keys;
+}
+
+void indexBTPageSetNumKeys(Index_BTPage* idx_page, int num_keys){
+    idx_page->num_keys = num_keys;
+}
+
+Index_Key* indexBTPageGetKeys(Index_BTPage* idx_page, int pos){
+    return idx_page->search_keys[pos];
+}
+
+void indexBTPageSetKeys(Index_BTPage* idx_page, int search_key, int64_t offset, int pos){
+    indexKeySetId(idx_page->search_keys[pos], search_key);
+    if(offset != NO_OFFSET) indexKeySetOffset(idx_page->search_keys[pos], offset);
+}
+
+//
+Index_Key* indexBTPageGetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos){
+    return idx_page->search_keys[pos];
+}
+void indexBTPageSetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos){
+    idx_page->search_keys[pos] = idx_key;
+}
+
+int indexBTPageGetPointers(Index_BTPage* idx_page, int pos){
+    return idx_page->pointers[pos];
+}
+
+void indexBTPageSetPointers(Index_BTPage* idx_page, int pointer, int pos){
+    idx_page->pointers[pos] = pointer;
+}
+
+void indexBTPageGetPtrs(Index_BTPage* idx_page, int** ptrs, Index_Key*** keys){
+
+    *keys = idx_page->search_keys;
+    *ptrs = idx_page->pointers;
+}
+
+//---------------- estruturas para parâmetros de busca -----------------------//
+struct parameter_hold{
+
+    int int_key;
+    char* str_key;
+    int param_val;
+};
+
+Parameter_Hold* parameterHoldCreate(){
+
+    Parameter_Hold* param = malloc(sizeof(Parameter_Hold));
+    param->int_key = EMPTY_INT_FIELD;
+    param->param_val = EMPTY_INT_FIELD;
+    param->str_key = NULL;
+
+    return param;
+};
+
+Parameter_Hold** parameterArrayCreate(int parameter_num){
+
+    Parameter_Hold** arr = malloc(parameter_num*sizeof(Parameter_Hold*));
+
+    for(int i = 0; i < parameter_num; i++){
+        arr[i] = parameterHoldCreate();
     }
 
-    return array;
+    return arr; 
 }
 
-Index_Data_t* indexNodeGetData(Index_Node_t* node){
-    return node->data;
+void parameterHoldDestroy(Parameter_Hold* param){
+    if(param->str_key != NULL)
+        free(param->str_key);
+    free(param);
 }
 
-void indexNodeSetData(Index_Node_t** node, int pos, Index_Data_t* data){
-    node[pos]->data = data;
-}
-
-Index_Node_t* indexNodeStackData(Index_Node_t* node, Index_Node_t* next){
-    node->next = next;
-    return node->next;
-}
-
-Index_Node_t* indexNodeGetNext(Index_Node_t* node){
-    return node->next;
-}
-
-void indexNodeSetNext(Index_Node_t* node, Index_Node_t* next){
-    node->next = next;
-}
-
-// apagar????????
-void indexArrayTrim(Index_Node_t** array, int node_num){
-
-    array = realloc(array, node_num*sizeof(Index_Node_t*));
-}
-
-int indexDataStrCmp(const void *a, const void *b){
-  
-    Index_Node_t** elem1_ptr = (Index_Node_t **)a;
-    Index_Node_t** elem2_ptr = (Index_Node_t **)b;
-
-    Index_Node_t* elem1 = *elem1_ptr;
-    Index_Node_t* elem2 = *elem2_ptr;
-
-    char* str1 = elem1->data->str_key;
-    char* str2 = elem2->data->str_key;
-    
-    for(int i = 0; i < STR_SIZE; i++){
-        int j = str1[i] - str2[i];
-        if(j != 0) return j;
+void parameterArrayDestroy(Parameter_Hold** array, int size){
+    for(int i = 0; i < size; i++){
+        //if(array[i] != NULL)
+            parameterHoldDestroy(array[i]);
     }
-
-    return 0;
-}
-
-int indexDataIntCmp(const void *a, const void *b){
-  
-    Index_Node_t** elem1_ptr = (Index_Node_t **)a;
-    Index_Node_t** elem2_ptr = (Index_Node_t **)b;
-
-    Index_Node_t* elem1 = *elem1_ptr;
-    Index_Node_t* elem2 = *elem2_ptr;
-
-    int int1 = elem1->data->int_key;
-    int int2 = elem2->data->int_key;
-    
-    int j = int1 - int2;
-    if(j != 0) return j;
-
-    return 0;
-}
-
-void freeNodeList(Index_Node_t* node){
-    if(node == NULL) return;
-    
-    Index_Node_t* next = indexNodeGetNext(node);
-    indexDataDestroy(node->data);
-    free(node);
-    freeNodeList(next);
-}
-
-void indexArrayDestroy(Index_Node_t** array, int size, int unique_node_num){
-
-    for(int i = 0;  i < unique_node_num; i++){
-        Index_Node_t* next = indexNodeGetNext(array[i]);
-        freeNodeList(next);
-        indexDataDestroy(array[i]->data);
-        free(array[i]);
-    }
-    for(int i = unique_node_num; i < size; i++){
-        free(array[i]);
-    }
-
     free(array);
 }
 
-//----------------------- structs para arquivo binário -----------------------// 
+void paramHoldSetIntKey(Parameter_Hold* param, int key){
+    param->int_key = key;
+}
+
+int paramHoldGetIntKey(Parameter_Hold* param){
+    return param->int_key;
+}
+
+int paramHoldGetVal(Parameter_Hold* param){
+    return param->param_val;
+}
+
+void paramHoldSetVal(Parameter_Hold* param, int param_val){
+    param->param_val = param_val;
+}
+
+char* paramHoldGetStrKey(Parameter_Hold* param){
+    return param->str_key;
+}
+
+void paramHoldSetStrKey(Parameter_Hold* param, char* key){
+    param->str_key = key;
+}
+
+//----------------------- structs para arquivo de dados ----------------------// 
 
 struct Header {
     char status;
@@ -227,34 +277,34 @@ struct Header {
 struct Data {
     char removed;
     int32_t crime_id;
-    char* crime_date;
+    char crime_date[DATE_SIZE];
     int32_t article_number;
     char* crime_place;
     char* crime_description;
-    char* cellphone_brand;
+    char cellphone_brand[BRAND_SIZE];
     char delimiter;
+    int extra_size; //tamanho adicional que pode ocorrer pelo preenchimento no update
 };
 
-Bin_Data_t* dataCreate() {
-    Bin_Data_t* data = calloc(1, sizeof(Bin_Data_t));
+Data_Register* dataCreate() {
+    Data_Register* data = calloc(1, sizeof(Data_Register));
     data->removed = '0';
     data->delimiter = '#';
+    data->extra_size = 0;
 
     return data;
 }
 
-void dataDestroy(Bin_Data_t* data) {
+void dataDestroy(Data_Register* data) {
 
-    free(data->crime_date);
     free(data->crime_description);
     free(data->crime_place);
-    free(data->cellphone_brand);
 
     free(data);
 }
 
-Bin_Header_t* headerCreate() {
-    Bin_Header_t* header = calloc(1, sizeof(Bin_Header_t));
+Data_Header* headerCreate() {
+    Data_Header* header = calloc(1, sizeof(Data_Header));
 
     header->num_struct_arch = 0;
     header->num_rem_structs = 0;
@@ -264,102 +314,121 @@ Bin_Header_t* headerCreate() {
     return header;
 }
 
-char headerGetStatus(Bin_Header_t* header){
+char headerGetStatus(Data_Header* header){
     return header->status;
 }
 
-void headerSetStatus(Bin_Header_t* header, char status){
+void headerSetStatus(Data_Header* header, char status){
     header->status = status;
 }
 
-int64_t headerGetOffset(Bin_Header_t* header){
+int64_t headerGetOffset(Data_Header* header){
     return header->next_offset_byte;
 }
 
-void headerSetOffset(Bin_Header_t* header, int64_t offset){
+void headerSetOffset(Data_Header* header, int64_t offset){
     header->next_offset_byte = offset;
 }
 
-int headerGetStructNum(Bin_Header_t* header){
+int headerGetStructNum(Data_Header* header){
     return header->num_struct_arch;
 }
 
-void headerSetStructNum(Bin_Header_t* header, int struct_num){
+void headerSetStructNum(Data_Header* header, int struct_num){
     header->num_struct_arch = struct_num;
 }
 
-int headerGetRemStructNum(Bin_Header_t* header){
+int headerGetRemStructNum(Data_Header* header){
     return header->num_rem_structs;
 }
 
-void headerSetRemStructNum(Bin_Header_t* header, int rem_struct_num){
+void headerSetRemStructNum(Data_Header* header, int rem_struct_num){
     header->num_rem_structs = rem_struct_num;
 }
 
-char dataGetRemoved(Bin_Data_t* data){
+char dataGetRemoved(Data_Register* data){
     return data->removed;
 }
 
-void dataSetRemoved(Bin_Data_t* data, char removed){
+void dataSetRemoved(Data_Register* data, char removed){
     data->removed = removed;
 }
 
-char dataIsRemoved(Bin_Data_t* data){
-    return data->removed == '1';
-}
-
-int dataGetId(Bin_Data_t* data){
+int dataGetId(Data_Register* data){
     return data->crime_id;
 }
 
-void dataSetId(Bin_Data_t* data, int id){
+void dataSetId(Data_Register* data, int id){
     data->crime_id = id;
 }
 
-char* dataGetDate(Bin_Data_t* data){
+char* dataGetDate(Data_Register* data){
     return data->crime_date;
 }
 
-void dataSetDate(Bin_Data_t* data, char* date){
-    data->crime_date = date;
+void dataSetDate(Data_Register* data, char* date){
+    for(int i = 0; i < DATE_SIZE; i++){
+        data->crime_date[i] = date[i];
+    }
 }
 
-int dataGetArticle(Bin_Data_t* data){
+int dataGetArticle(Data_Register* data){
     return data->article_number;
 }
 
-void dataSetArticle(Bin_Data_t* data, int article){
+void dataSetArticle(Data_Register* data, int article){
     data->article_number = article;
 }
 
-char* dataGetPlace(Bin_Data_t* data){
+char* dataGetPlace(Data_Register* data){
     return data->crime_place;
 }
 
-void dataSetPlace(Bin_Data_t* data, char* crime_place){
+void dataSetPlace(Data_Register* data, char* crime_place){
     data->crime_place = crime_place;
 }
 
-char* dataGetDescription(Bin_Data_t* data){
+char* dataGetDescription(Data_Register* data){
     return data->crime_description;
 }
 
-void dataSetDescription(Bin_Data_t* data, char* description){
+void dataSetDescription(Data_Register* data, char* description){
     data->crime_description = description;
 }
 
-char* dataGetBrand(Bin_Data_t* data){
+char* dataGetBrand(Data_Register* data){
     return data->cellphone_brand;
 }
 
-void dataSetBrand(Bin_Data_t* data, char* brand){
-    data->cellphone_brand = brand;
+void dataSetBrand(Data_Register* data, char* brand){
+    for(int i = 0; i < BRAND_SIZE; i++){
+        data->cellphone_brand[i] = brand[i];
+    }
 } 
 
-char dataGetDelimiter(Bin_Data_t* data){
+char dataGetDelimiter(Data_Register* data){
     return data->delimiter;
 }
 
-void dataSetDelimiter(Bin_Data_t* data, char delimiter){
+void dataSetDelimiter(Data_Register* data, char delimiter){
     data->delimiter = delimiter;
 } 
+
+int dataGetExtraSize(Data_Register* data){
+    return data->extra_size;
+}
+
+void dataSetExtraSize(Data_Register* data, int extra_size){
+    data->extra_size = extra_size;
+} 
+
+int dataGetSize(Data_Register* data){
+    
+    int total_size = 0;
+    int str_size = varStrTell(dataGetPlace(data));
+    str_size += varStrTell(dataGetDescription(data));
+    total_size = dataGetExtraSize(data);
+    total_size += str_size;
+
+    return total_size + DATA_BASE_SIZE;
+}

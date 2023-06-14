@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <aux.h>
 #include <header.h>
+#include <index.h>
 #include <input_output.h>
 #include <structs.h>
 
@@ -13,105 +14,142 @@
 #define DATE_SIZE 10
 #define STR_SIZE 12
 
+//os blocos seguem a lógica: alocadores, get/set, desalocadores
 //----------------------- structs para arquivo índicie -----------------------//
 
-typedef struct index_header_ Index_Header_t;
-typedef struct index_data_ Index_Data_t;
+typedef struct index_header_ Index_Header;
+typedef struct index_key_ Index_Key;
+typedef struct index_bt_page_ Index_BTPage;
 
-Index_Header_t* indexHeaderCreate();
-Index_Data_t* indexDataCreate();
+Index_Header* indexHeaderCreate();
+void indexHeaderDestroy(Index_Header* index_header);
 
-char indexHeaderGetStatus(Index_Header_t* header);
-void indexHeaderSetStatus(Index_Header_t* header, char status);
+char indexHeaderGetStatus(Index_Header* header);
 
-int indexHeaderGetNum(Index_Header_t* header);
+void indexHeaderSetStatus(Index_Header* header, char status);
 
-void indexHeaderSetNum(Index_Header_t* header, int num);
+int indexHeaderGetRootNode(Index_Header* header);
 
-int64_t indexDataGetOffset(Index_Data_t* data);
-void indexDataSetOffset(Index_Data_t* data, int64_t offset);
+void indexHeaderSetRootNode(Index_Header* header, int RRN);
 
-int indexDataGetIntKey(Index_Data_t* data);
-void indexDataSetIntKey(Index_Data_t* data, int key);
+int indexHeaderGetRnnNextNode(Index_Header* header);
 
-char* indexDataGetStrKey(Index_Data_t* data);
-void indexDataSetStrKey(Index_Data_t* data, char* key);
+void indexHeaderSetRnnNextNode(Index_Header* header, int RRN);
 
-void indexDataSetParam(Index_Data_t* data, int param);
-int indexDataGetParam(Index_Data_t* data);
+int indexHeaderGetNumKeys(Index_Header* header);
 
-void indexHeaderDestroy(Index_Header_t* index_header);
-void indexDataDestroy(Index_Data_t* int_data);
-void stringDataDestroy(Index_Data_t* string_data);
+void indexHeaderSetNumKeys(Index_Header* header, int num);
 
-//---------------- estrutura de dados array com lista ligada -----------------//
+int indexHeaderGetNumLevels(Index_Header* header);
+
+void indexHeaderSetNumLevels(Index_Header* header, int num);
+
+Index_Key* indexKeyCreate();
+void indexKeyDestroy(Index_Key* index_key);
+
+int indexKeyGetId(Index_Key* idx_key);
+void indexKeySetId(Index_Key* idx_key, int id);
+
+int64_t indexKeyGetKeyOffset(Index_Key* idx_key);
+void indexKeySetOffset(Index_Key* idx_key, int64_t offset);
+
+void indexBTPageSetPtrs(Index_BTPage* idx_page, int** ptrs, Index_Key*** keys);
+
+//bt page
+
+Index_BTPage* indexBTPageCreate();
+
+void indexBTPageDestroy(Index_BTPage* node);
 
 
+int indexBTPageGetRrn(Index_BTPage* idx_page);
+void indexBTPageSetRrn(Index_BTPage* idx_page, int rrn);
 
-typedef struct index_node_ Index_Node_t;
+int indexBTPageGetNodeLevel(Index_BTPage* idx_page);
+void indexBTPageSetNodeLevel(Index_BTPage* idx_page, int node_level);
 
-Index_Node_t* indexNodeCreate(Index_Data_t* data);
-Index_Node_t** indexArrayCreate(int node_num);
+int indexBTPageGetNumKeys(Index_BTPage* idx_page);
+void indexBTPageSetNumKeys(Index_BTPage* idx_page, int num_keys);
 
-Index_Data_t* indexNodeGetData(Index_Node_t* node);
-void indexNodeSetData(Index_Node_t** node, int pos, Index_Data_t* data);
+Index_Key* indexBTPageGetKeys(Index_BTPage* idx_page, int pos);
+void indexBTPageSetKeys(Index_BTPage* idx_page, int search_key, int64_t offset, int pos);
 
-Index_Node_t* indexNodeGetNext(Index_Node_t* node);
-void indexNodeSetNext(Index_Node_t* node, Index_Node_t* next);
+Index_Key* indexBTPageGetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos);
+void indexBTPageSetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos);
 
-Index_Node_t* indexNodeStackData(Index_Node_t* node, Index_Node_t* next);
+int indexBTPageGetPointers(Index_BTPage* idx_page, int pos);
+void indexBTPageSetPointers(Index_BTPage* idx_page, int pointer, int pos);
 
-int indexDataStrCmp(const void *a, const void *b);
-int indexDataIntCmp(const void *a, const void *b);
+void indexBTPageGetPtrs(Index_BTPage* idx_page, int** ptr, Index_Key*** idx_keys);
 
-void indexArrayTrim(Index_Node_t** array, int node_num);
 
-void indexArrayDestroy(Index_Node_t** array, int size, int unique_node_num);
+//--------------------- structs para parâmetros de busca ---------------------//
 
-//----------------------- structs para arquivo binário -----------------------// 
+typedef struct parameter_hold Parameter_Hold;
 
-typedef struct Header Bin_Header_t;
-typedef struct Data Bin_Data_t;
+Parameter_Hold* parameterHoldCreate();
+Parameter_Hold** parameterArrayCreate(int parameter_num);
+
+int paramHoldGetIntKey(Parameter_Hold* param);
+void paramHoldSetIntKey(Parameter_Hold* param, int key);
+
+int paramHoldGetVal(Parameter_Hold* param);
+void paramHoldSetVal(Parameter_Hold* param, int param_val);
+
+char* paramHoldGetStrKey(Parameter_Hold* param);
+void paramHoldSetStrKey(Parameter_Hold* param, char* key);
+
+void parameterArrayDestroy(Parameter_Hold** array, int size);
+void parameterHoldDestroy(Parameter_Hold* param);
+
+//---------------------- structs para arquivo de dados -----------------------// 
+
+typedef struct Header Data_Header;
+typedef struct Data Data_Register;
 // functions to create/free the structs
-Bin_Data_t* dataCreate();
-void dataDestroy(Bin_Data_t* data);
-Bin_Header_t* headerCreate();
+Data_Register* dataCreate();
+void dataDestroy(Data_Register* data);
+Data_Header* headerCreate();
 
-char headerGetStatus(Bin_Header_t* header);
-void headerSetStatus(Bin_Header_t* header, char status);
+char headerGetStatus(Data_Header* header);
+void headerSetStatus(Data_Header* header, char status);
 
-int64_t headerGetOffset(Bin_Header_t* header);
-void headerSetOffset(Bin_Header_t* header, int64_t offset);
+int64_t headerGetOffset(Data_Header* header);
+void headerSetOffset(Data_Header* header, int64_t offset);
 
-int headerGetStructNum(Bin_Header_t* header);
-void headerSetStructNum(Bin_Header_t* header, int struct_num);
+int headerGetStructNum(Data_Header* header);
+void headerSetStructNum(Data_Header* header, int struct_num);
 
-int headerGetRemStructNum(Bin_Header_t* header);
-void headerSetRemStructNum(Bin_Header_t* header, int rem_struct_num);
+int headerGetRemStructNum(Data_Header* header);
+void headerSetRemStructNum(Data_Header* header, int rem_struct_num);
 
-char dataGetRemoved(Bin_Data_t* data);
-void dataSetRemoved(Bin_Data_t* data, char removed);
-char dataIsRemoved(Bin_Data_t* data);
+char dataGetRemoved(Data_Register* data);
+void dataSetRemoved(Data_Register* data, char removed);
 
-int dataGetId(Bin_Data_t* data);
-void dataSetId(Bin_Data_t* data, int id);
+int dataGetId(Data_Register* data);
+void dataSetId(Data_Register* data, int id);
 
-char* dataGetDate(Bin_Data_t* data);
-void dataSetDate(Bin_Data_t* data, char* date);
+char* dataGetDate(Data_Register* data);
+void dataSetDate(Data_Register* data, char* date);
 
-int dataGetArticle(Bin_Data_t* data);
-void dataSetArticle(Bin_Data_t* data, int article);
+int dataGetArticle(Data_Register* data);
+void dataSetArticle(Data_Register* data, int article);
 
-char* dataGetPlace(Bin_Data_t* data);
-void dataSetPlace(Bin_Data_t* data, char* crime_place);
+char* dataGetPlace(Data_Register* data);
+void dataSetPlace(Data_Register* data, char* crime_place);
 
-char* dataGetDescription(Bin_Data_t* data);
-void dataSetDescription(Bin_Data_t* data, char* description);
+char* dataGetDescription(Data_Register* data);
+void dataSetDescription(Data_Register* data, char* description);
 
-char* dataGetBrand(Bin_Data_t* data);
-void dataSetBrand(Bin_Data_t* data, char* brand);
+char* dataGetBrand(Data_Register* data);
+void dataSetBrand(Data_Register* data, char* brand);
 
-char dataGetDelimiter(Bin_Data_t* data);
-void dataSetDelimiter(Bin_Data_t* data, char delimiter);
+char dataGetDelimiter(Data_Register* data);
+void dataSetDelimiter(Data_Register* data, char delimiter);
+
+int dataGetExtraSize(Data_Register* data);
+void dataSetExtraSize(Data_Register* data, int extra_size);
+
+int dataGetSize(Data_Register* data);
 
 #endif // !STRUCTS_H_
