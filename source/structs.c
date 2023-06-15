@@ -101,6 +101,7 @@ void indexKeyDestroy(Index_Key* index_key){
 }
 
 int indexKeyGetId(Index_Key* idx_key){
+    if(idx_key == NULL) return -1;
     return idx_key->id_key;
 }
 void indexKeySetId(Index_Key* idx_key, int id){
@@ -108,6 +109,7 @@ void indexKeySetId(Index_Key* idx_key, int id){
 }
 
 int64_t indexKeyGetKeyOffset(Index_Key* idx_key){
+    if(idx_key == NULL) return -1;
     return idx_key->key_offset ;
 }
 void indexKeySetOffset(Index_Key* idx_key, int64_t offset){

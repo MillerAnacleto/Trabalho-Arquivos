@@ -264,20 +264,30 @@ bool rightSiblingRedistribuition(FILE* index_file, Index_BTPage* node,
 
         //lógica para escrever as chaves nas páginas 
         //reescrever a página da esquerda, pai e direita
-        for(int i = 0; i < BT_KEY_NUM; i++){
+        int lamt = 0;
+        if(num_keys <= 7) lamt = 3;
+        else lamt = 4;
+        
+        for(int i = 0; i < lamt; i++){
             indexBTPageSetPtrKey(node, keys[i], i);
             indexBTPageSetPointers(node, point[i], i);
         }
-        indexBTPageSetPointers(node, point[BT_KEY_NUM], BT_KEY_NUM);
+        indexBTPageSetPointers(node, point[lamt], lamt);
 
-        indexBTPageSetPtrKey(parent_node, keys[BT_KEY_NUM], parent_pos);
-        for(int i = BT_ORDER; i <= count; i++){
-            indexBTPageSetPtrKey(right_node, keys[i], i-BT_ORDER);
-            indexBTPageSetPointers(right_node, point[i], i-BT_ORDER);
+        indexBTPageSetPtrKey(parent_node, keys[lamt], parent_pos);
+        for(int i = (lamt+1); i <= count; i++){
+            indexBTPageSetPtrKey(right_node, keys[i], i-(lamt+1));
+            indexBTPageSetPointers(right_node, point[i], i-(lamt+1));
         }
-        indexBTPageSetPointers(right_node, point[count+1], count+1-BT_ORDER);
+        indexBTPageSetPointers(right_node, point[count+1], count+1-(lamt+1));
 
-        indexBTPageSetNumKeys(node, 4);
+        if(count-lamt <= 3){
+            Index_Key* empty = indexKeyCreate();
+            indexBTPageSetPtrKey(right_node, empty, BT_KEY_NUM-1);
+            indexBTPageSetPointers(right_node, -1, BT_KEY_NUM);
+        }
+
+        indexBTPageSetNumKeys(node, lamt);
         indexBTPageSetNumKeys(right_node, right_key_num+1);
 
         indexBTPageWrite(index_file, node, indexBTPageGetRrn(node));
@@ -333,22 +343,33 @@ bool leftSiblingRedistribuition(FILE* index_file, Index_BTPage* node, Index_BTPa
         int insert_pos = bbin(keys, 0, count, indexKeyGetId(inserted_key));
         arrayShiftInsert(keys, point, count, insert_pos, inserted_key, *inserted_point);
 
-        for(int i = 0; i <= left_key_num; i++){
+        // ERRO AQUI!
+        int lamt = 0;
+        if(left_key_num < 2) lamt = 3;
+        else lamt = left_key_num+1; //versão run.codes original
+        //else lamt = 4; //versão de acordo com a especificação
+
+        for(int i = 0; i < lamt; i++){
             indexBTPageSetPtrKey(left_node, keys[i], i);
             indexBTPageSetPointers(left_node, point[i], i);
         }
-        indexBTPageSetPointers(left_node, point[left_key_num+1], left_key_num+1);
+        indexBTPageSetPointers(left_node, point[lamt], lamt);
 
-        indexBTPageSetPtrKey(parent_node, keys[1+left_key_num], parent_pos);
-        int j = left_key_num+2;
+        indexBTPageSetPtrKey(parent_node, keys[lamt], parent_pos);
+        int j = lamt+1;
         for(int i = j; i < num_keys; i++){
             indexBTPageSetPtrKey(node, keys[i], i-j);
             indexBTPageSetPointers(node, point[i], i-j);
         }
         indexBTPageSetPointers(node, point[num_keys], num_keys-j);
+        if(num_keys-j == 3){
+            Index_Key* empty = indexKeyCreate();
+            indexBTPageSetPtrKey(node, empty, BT_KEY_NUM-1);
+            indexBTPageSetPointers(node, -1, BT_KEY_NUM);
+        }
 
-        indexBTPageSetNumKeys(left_node, left_key_num+1);
-        indexBTPageSetNumKeys(node, BT_KEY_NUM);
+        indexBTPageSetNumKeys(left_node, lamt);
+        indexBTPageSetNumKeys(node, num_keys-j);
 
         indexBTPageWrite(index_file, left_node, indexBTPageGetRrn(left_node));
         indexBTPageWrite(index_file, node, indexBTPageGetRrn(node));
@@ -385,7 +406,6 @@ void indexInnerKeyInsert(FILE* index_file, Index_BTPage* node, Index_Key* insert
     }
     indexBTPageSetPointers(node, points[size+1], size+1);
 
-
     indexBTPageSetNumKeys(node, size+1);
     indexBTPageWrite(index_file, node, indexBTPageGetRrn(node));
 }
@@ -400,14 +420,14 @@ bool rootSplit(FILE* index_file, Index_Header* header, Index_BTPage* node,
     int rrn_insert = indexHeaderGetRnnNextNode(header);
 
     indexBTPageSetRrn(left_node, indexBTPageGetRrn(node));
-    indexBTPageSetRrn(node, rrn_insert + 1);
+    indexBTPageSetRrn(node, rrn_insert+1);
     indexBTPageSetRrn(right_node, rrn_insert);
     //indexHeaderSetRnnNextNode(header, rrn_insert+2);
 
     int level = indexBTPageGetNodeLevel(node);
     indexBTPageSetNodeLevel(left_node, level);
     indexBTPageSetNodeLevel(right_node, level);
-    indexBTPageSetNodeLevel(node, level+1);
+    indexBTPageSetNodeLevel(node, level + 1);
     //indexHeaderSetNumLevels(header, level+1);
 
     Index_Key* insert_key = *new_key;
@@ -446,7 +466,7 @@ bool rootSplit(FILE* index_file, Index_Header* header, Index_BTPage* node,
         indexBTPageSetPointers(node, -1, i+1);
     }
 
-    //ponteiros finais ajustados corretamenteS
+    //ponteiros finais ajustados corretamente
     indexBTPageSetPointers(left_node, points[mid], mid);
     indexBTPageSetPointers(right_node, points[BT_ORDER], mid);
 
@@ -455,15 +475,13 @@ bool rootSplit(FILE* index_file, Index_Header* header, Index_BTPage* node,
     indexBTPageSetNumKeys(left_node, (mid));
     indexBTPageSetNumKeys(right_node, (mid));
 
-    //a nova chave a ser inserida é a chave promovida
+    //não há promoção no split 1:2
     *new_key = NULL;
     *inserted_point = -2;
 
     indexBTPageWrite(index_file, node, indexBTPageGetRrn(node));
     indexBTPageWrite(index_file, left_node, indexBTPageGetRrn(left_node));
     indexBTPageWrite(index_file, right_node, indexBTPageGetRrn(right_node));
-
-    *new_key = NULL;
 
     return TRUE;
 }

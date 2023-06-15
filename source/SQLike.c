@@ -129,8 +129,7 @@ void SQLInsertInto(){
     scanf("%d", &insert_num);
     
     for(int i = 0; i < insert_num; i++){
-        //modificar: BTreeInsert();
-        //insertIntoBinaryFile(read_file_name, index_file_name, index_parameter);
+        insertIntoBinaryFile(read_file_name, index_file_name, index_parameter);
     }
     
     int64_t offset = 0;

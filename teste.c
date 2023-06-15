@@ -46,15 +46,14 @@ int main(int argc, char** argv){
    
 
     if(show){
-        for(int i = 0; i <= 1000; i++){
+        for(int i = 0; i <= 463; i++){
 
             Index_BTPage* idx = indexBTPageRead(index_file_old, i);
             indexBTPagePrint(idx);
         }
-
     }
 
-     if(1){
+    if(1){
         fseek(index_file_old, 0, SEEK_SET);
         Index_Header* header = indexHeaderRead(index_file_old);
         Index_BTPage* node = indexBTPageRead(index_file_old, 0);
