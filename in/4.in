@@ -1,4 +1,4 @@
-9 bin/binario4.bin numeroArtigo inteiro bin/indice4.bin 4
+9 bin/binario4.bin idCrime inteiro bin/indice4.bin 4
 3 lugarCrime "SAO PAULO" numeroArtigo 171 idCrime 560
 2 numeroArtigo 157 idCrime 1193
 1 dataCrime "28/02/2024"

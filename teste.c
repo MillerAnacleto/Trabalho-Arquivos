@@ -74,7 +74,7 @@ int main(int argc, char** argv){
     // Index_BTPage* notonode = indexBTPageRead(index_file_old, 301);
     // //indexBTPagePrint(notonode);
     // //pointer = indexKeyInsert(index_file_old, header, 1534, 373737);
-    // //pointer = indexBTPageSearch(index_file_old, indexHeaderGetRootNode(header), 1532);
+    // //pointer = indexBTSearch(index_file_old, indexHeaderGetRootNode(header), 1532);
 
     // Index_BTPage* nnode = indexBTPageCreate();
     // for(int i = 0; i < BT_KEY_NUM; i++){

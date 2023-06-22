@@ -6,9 +6,10 @@ PROG = main.c
 DFLAGS = -g3 -O3 -fsanitize=address -fstack-protector-all -fstack-clash-protection -fasynchronous-unwind-tables -D_FORTIFY_SOURCE=2
 FLAGS = -g -lm -march=native
 VFLAGS = --show-leak-kinds=all --track-origins=yes --leak-check=full -s
+WFLAGS = -Wall -Wpedantic
 
 all:
-	@$(CC) -o $(BINARY) $(PROG) $(SOURCES) -I$(INCLUDES) $(FLAGS)
+	@$(CC) -o $(BINARY) $(PROG) $(SOURCES) -I$(INCLUDES) $(FLAGS) $(WFLAGS)
 run: 
 	@$(BINARY)
 valgrind: all clear 

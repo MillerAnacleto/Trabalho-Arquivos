@@ -140,8 +140,9 @@ void indexBTPageDestroy(Index_BTPage* node){
         for(int i = 0; i < BT_KEY_NUM; i++){
             indexKeyDestroy(node->search_keys[i]);
         }
-        free(node);
     }
+    free(node);
+
 }
 
 int indexBTPageGetRrn(Index_BTPage* idx_page){
@@ -179,11 +180,16 @@ void indexBTPageSetKeys(Index_BTPage* idx_page, int search_key, int64_t offset, 
 }
 
 //
-Index_Key* indexBTPageGetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos){
+Index_Key* indexBTPageGetPtrKey(Index_BTPage* idx_page, int pos){
     return idx_page->search_keys[pos];
 }
 void indexBTPageSetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos){
+    
     idx_page->search_keys[pos] = idx_key;
+}
+void indexBTPageCleanPtrKey(Index_BTPage* idx_page, int pos){
+    //indexKeyDestroy(idx_page->search_keys[pos]);
+    idx_page->search_keys[pos] = NULL;
 }
 
 int indexBTPageGetPointers(Index_BTPage* idx_page, int pos){
@@ -216,7 +222,7 @@ Parameter_Hold* parameterHoldCreate(){
     param->str_key = NULL;
 
     return param;
-};
+}
 
 Parameter_Hold** parameterArrayCreate(int parameter_num){
 

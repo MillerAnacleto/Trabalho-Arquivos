@@ -7,10 +7,10 @@
 
 void SQLCreateTable();      //f1
 void SQLSelectFrom();       //f2
-void SQLCreateIndex();      //f3
-void SQLSelectWhere();      //f4
+void SQLCreateIndex();      //f3 / f8
+void SQLSelectWhere();      //f4 / f9
 void SQLDeleteWhere();      //f5
-void SQLInsertInto();       //f6
+void SQLInsertInto();       //f6 / f10
 void SQLUpdateSetWhere();   //f7
 
 

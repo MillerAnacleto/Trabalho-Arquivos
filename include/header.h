@@ -29,8 +29,20 @@ int dataHeaderWrite(FILE* data_file, Data_Header* header, int64_t offset);
  */
 Data_Header* dataHeaderRead(FILE* data_file);
 
+/**
+ * @brief lê o cabeçalho de um arquivo binário tipo árvore B*
+ * 
+ * @param index arquivo de indice
+ * @return o cabeçalho preenchido
+ */
 Index_Header* indexHeaderRead(FILE* index);
 
+/**
+ * @brief escreve o cabeçalho de um arquivo binário tipo árvore B*
+ * 
+ * @param index arquivo de indice
+ * @return o número de itens escritos com sucesso
+ */
 int indexHeaderWrite(FILE* index_file, Index_Header* header, int64_t offset);
 
 #endif // !HEADER_H_

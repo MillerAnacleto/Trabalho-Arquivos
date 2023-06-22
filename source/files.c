@@ -125,46 +125,30 @@ void fileIndexCreate(char* data_file_name, char* index_file_name, int64_t *offse
     int size = headerGetStructNum(data_header);
     *offset += BIN_HEADER_SIZE; //offset provocado pelo data_header do arq de dados
     
-    //modificar: criar arvore B*
-    //Index_Node** index_array = indexArrayCreate(size);
-    
-    //modificar: BT_Index_Key
-
-
+    //criamos um arquivo de árvore B* vazio (apenas o cabeçalho)
     FILE* index_file = binaryFileOpenReadWriteC(index_file_name);
     indexBTreeCreate(index_file);
-    //escrever data_header com status '0'
     
     fseek(read_file, *offset, SEEK_SET);
+    //leitura do arquivo de dados
     for(int i = 0; i < size; i++){
         int64_t offsetemp = *offset;
-        char exists = 0;
         Data_Register* data = dataBinaryRead(read_file);
 
         indexKeyInsert(index_file, dataGetId(data), offsetemp);
 
         *offset += dataGetSize(data);
+        dataDestroy(data);
     }
 
     //reesecrevemos o data_header do arq de dados com status '1'
     headerSetStatus(data_header, '1');
     dataHeaderWrite(read_file, data_header, 0);
     fileClose(read_file);
-
-    //modificação: o arquivo da BTree já está aberto, a inserção ocorre no arquivo
     
-    //escrevemos o data_header do arq de indice com status '1' e num de structs setado
-    // indexHeaderSetStatus(index_header, '1');
-    // indexHeaderSetNum(index_header, non_empty);
-    // indexHeaderWrite(index_file, index_header, 0);
-    
-    // free(index_header);
     free(data_header);
 
-    //rescrever header do índice com status '1'
     fileClose(index_file);
-
-    
     binarioNaTela(index_file_name);
 }
 
@@ -174,7 +158,6 @@ int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter,
     int found = 0;
     FILE* data_file = binaryFileOpenRead(filename);
     FILE* index_file = binaryFileOpenRead(index_file_name);
-    int parameter = 0;
     char index_flag = 0;
     int parameter_index = 0;
     int parameter_num = 0;
@@ -187,7 +170,7 @@ int SearchBinaryFile(char* filename, char* index_file_name, int index_parameter,
        found = searchBT(index_file, data_file, array, parameter_num);
     }
     else{
-        found = linearSearchBinaryFile(data_file, array, parameter_num, fnt);
+        found = linearSearchBinaryFile(data_file, array, parameter_num);
     }
     
     parameterArrayDestroy(array, parameter_num);
@@ -207,27 +190,19 @@ void insertIntoBinaryFile(char* filename, char* index_file_name, int index_param
     int size_array[2];
     Data_Register* data;
     Data_Header* header;
-    Index_Header* index_header;
     int64_t offset;
-    int index_str_num;
     
-    int index_pos = 0;
 
     // lê o cabeçalho do arquivo de dados
     header = dataHeaderRead(data_file);
     headerSetStatus(header, '0');
     dataHeaderWrite(data_file, header, 0);
 
-    // lê o cabeçalho do arquivo de indice
-    index_header = indexHeaderRead(index_file);
-    indexHeaderSetStatus(index_header, '1');
-    indexHeaderWrite(index_file, index_header, 0);
 
     // le novo data
     data = dataRead(size_array);
 
     offset = headerGetOffset(header);
-    index_str_num = indexHeaderGetNumKeys(index_header);
 
     // escreve novo data
     dataBinaryWrite(data_file, data, size_array, offset);
@@ -242,85 +217,8 @@ void insertIntoBinaryFile(char* filename, char* index_file_name, int index_param
     if(index_parameter == 0){
         indexKeyInsert(index_file, dataGetId(data), offset);
     }
-
-
-    //modificar: chamar a função para inserir a chave de BTree 
-
-    // // cria o data do novo nó
-    // Index_Data* new_node_data = indexDataCreate();
-    // indexDataSetOffset(new_node_data, offset);
-
-    // // array da leituro do indice 
-    // Index_Node** node_array = indexArrayCreate(index_str_num);
-    // int unique_node_num;
-    // char index_checker = 1;
-
-    // // lê o indice e o coloca no array de nodes
-    // dataIndexArrayIntRead(index_file, node_array, index_str_num, &unique_node_num);
-
-    // // verifica se o valor lido do parametro do indíce não é nulo
-    // int field_val = dataGetIntField(data, index_parameter);
-    // if(field_val == -1){
-    //     index_checker = 0;
-    // }
-    // indexDataSetIntKey(new_node_data, field_val);
-
-    // // busca se esse valor já existe no indice
-    // index_pos = binarySearchIndexInt(node_array, 0, unique_node_num - 1, field_val);
-
-    
-    
-    // // cria um novo nó de indice a partir dos dados recebidos
-    // Index_Node* new_node = indexNodeCreate(new_node_data);
-
-    // // atualiza e escreve o index header
-    // indexHeaderSetNum(index_header, indexHeaderGetNum(index_header) + 1);
-    // indexHeaderSetStatus(index_header, '1');
-    // indexHeaderWrite(index_file, index_header, 0);
-
-    // // se o valor ainda não existe no indice criamos ele
-    // if(index_pos == -1){
-    //     // se há espaço no vetor apenas colocamos ele lá
-    //     if(unique_node_num < index_str_num){
-    //         node_array[unique_node_num] = new_node;
-    //         unique_node_num++;
-    //     }
-    //     // senão realocamos o vetor aumentando seu espaço
-    //     else{
-    //         node_array = realloc(node_array, (++index_str_num) * sizeof(Index_Node *));
-    //         if(node_array == NULL){
-    //             indexArrayDestroy(node_array, index_str_num, unique_node_num);
-    //             dataDestroy(data);
-    //             free(header);
-    //             free(index_header);
-    //             fileClose(data_file);
-    //             fileClose(index_file);
-    //         }
-    //         unique_node_num++;
-    //         node_array[index_str_num - 1] = new_node;
-    //     }
-
-    // }
-    // // se valor existe no indice colocamos ele no fim da lista ligada 
-    // else{
-    //     Index_Node* node = node_array[index_pos];
-
-    //     while(indexNodeGetNext(node) != NULL){
-    //         node = indexNodeGetNext(node);
-    //     }
-        
-    //     indexNodeStackData(node, new_node);
-    // }
-
-    // // por fim ordenamos e escrevemos o indice
-    // dataIndexArraySort(node_array, unique_node_num, index_parameter);
-    // dataIndexArrayWrite(index_file, node_array, unique_node_num, index_parameter);
-    
-
-    // indexArrayDestroy(node_array, index_str_num, unique_node_num);
     
     dataDestroy(data);
-    free(index_header);
     free(header);
     fileClose(data_file);
     fileClose(index_file);

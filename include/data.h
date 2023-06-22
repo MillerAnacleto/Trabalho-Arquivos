@@ -111,21 +111,6 @@ void dataSetIntField(Data_Register* data, int field, int param);
 void dataSetStrField(Data_Register* data, char* str, int param);
 
 /**
- * @brief busca binária em um array de índices, encapsula as funções que lidam com 
- * int e string
- * 
- * @param index_file arquivo de índice sendo lido para gerar o array de índice a ser
- * buscado
- * @param data_file arquivo de dados a ser lido para a comparação completa entre os parâmetros 
- * @param array array de parâmetros
- * @param parameter_num número de parâmetros de busca
- * @param parameter_index indice do parâmetro que contém o campo indexado no arquivo de índice
- * @return número de registros encontrados com sucesso
- */
-int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** array,  
-    int parameter_num, int parameter_index, Parameter_Hold** (*fnt)(fntptr));
-
-/**
  * @brief faz busca linear num arquivo de dados binário
  * 
  * @param file arquivo de dados
@@ -134,8 +119,7 @@ int binarySearchIndexArray(FILE* index_file, FILE* data_file, Parameter_Hold** a
  * @param fnt ponteiro de função para o que deve ser executado quando a busca tem sucessp
  * @return numero de itens encontrados
  */
-int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
-    Parameter_Hold** (*fnt) (fntptr));
+int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size);
 
 /**
  * @brief função para imprimir na tela o registro de dados 
@@ -157,6 +141,15 @@ Parameter_Hold** ptrBinDataPrint(fntptr);
 Parameter_Hold** parameterArrayRead(int parameter_num, int index_parameter, char* binary_flag,
     int* parameter_index);
 
+/**
+ * @brief procura na árvore B* por um registro
+ * 
+ * @param index_file arquivo da árvore 
+ * @param data_file arquivo de dados
+ * @param array vetor de parâmetros
+ * @param parameter_num número de parâmetros
+ * @return número de elementos encontrados com os parâmetros especificados
+ */
 int searchBT(FILE* index_file, FILE* data_file, Parameter_Hold** array, int parameter_num);
 
 #endif // !DATA_H_

@@ -74,8 +74,9 @@ void indexBTPageSetNumKeys(Index_BTPage* idx_page, int num_keys);
 Index_Key* indexBTPageGetKeys(Index_BTPage* idx_page, int pos);
 void indexBTPageSetKeys(Index_BTPage* idx_page, int search_key, int64_t offset, int pos);
 
-Index_Key* indexBTPageGetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos);
+Index_Key* indexBTPageGetPtrKey(Index_BTPage* idx_page, int pos);
 void indexBTPageSetPtrKey(Index_BTPage* idx_page, Index_Key* idx_key, int pos);
+void indexBTPageCleanPtrKey(Index_BTPage* idx_page, int pos);
 
 int indexBTPageGetPointers(Index_BTPage* idx_page, int pos);
 void indexBTPageSetPointers(Index_BTPage* idx_page, int pointer, int pos);

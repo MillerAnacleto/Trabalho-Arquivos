@@ -16,8 +16,7 @@
  * @date 2023-04-08
  * 
  * @copyright Copyright (c) 2023
- * 
- */
+*/
 
 #include <SQLike.h>
 #include <stdio.h>
@@ -54,7 +53,6 @@ int main(void) {
         break;
         
     default:
-        printf("funcionalidade inválida\n");
 
         break;
     }

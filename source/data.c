@@ -322,8 +322,6 @@ bool dataParamCompare(Data_Register* bin_data, Parameter_Hold** parameter_array,
             char* str2 = paramHoldGetStrKey(parameter_array[i]);
 
             if(str1 == NULL || str2 == NULL) return 0;
-
-            int tam = paramHoldGetIntKey(parameter_array[i]);
             
             if(param == 2 || param == 5){
                 for(int j = 0; j < STR_SIZE; j++){
@@ -354,8 +352,7 @@ bool dataParamCompare(Data_Register* bin_data, Parameter_Hold** parameter_array,
     return TRUE;
 }
 
-int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
-     Parameter_Hold** (*fnt)(fntptr)){
+int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size){
     
     int found = 0;
     int64_t offset = 0;
@@ -368,9 +365,6 @@ int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
     }
 
     offset += BIN_HEADER_SIZE;
-
-    Parameter_Hold** substitution_array = NULL;
-    int substitution_num = 0;
 
     for(int i = 0; i < struct_num; i++){
             
@@ -385,17 +379,13 @@ int linearSearchBinaryFile(FILE* file, Parameter_Hold** array, int array_size,
 
         if(dataParamCompare(bin_data, array, array_size)){
             found++;
-            substitution_array = (*fnt)(file, offset, bin_data, header, substitution_array, &substitution_num);
+            dataPrintCsvStyle(bin_data);
+            printf("\n");
         }
 
-        //if(substitution_array == NULL)
-            dataDestroy(bin_data);
+        dataDestroy(bin_data);
     }
     
-    if(substitution_array != NULL)
-        //free(substitution_array);
-        parameterArrayDestroy(substitution_array, substitution_num);
-
     free(header);
     return found;
 }
@@ -412,6 +402,7 @@ int searchBT(FILE* index_file, FILE* data_file, Parameter_Hold** array, int para
     int search_key = 0;
     int found = 0;
 
+    //extraímos o parâmetro do tipo id
     for(int i = 0; i < parameter_num; i++){
         if(paramHoldGetVal (array[i]) == 0){
             search_key = paramHoldGetIntKey(array[i]);
@@ -419,7 +410,11 @@ int searchBT(FILE* index_file, FILE* data_file, Parameter_Hold** array, int para
         }
     }
 
-    int64_t key_offset = indexBTPageSearch(index_file, root_rrn, search_key);
+    //busca com propagação
+    int64_t key_offset = indexBTSearch(index_file, root_rrn, search_key);
+    if(key_offset == -1) return 0;
+    
+    //leitura completa do registro e impressão caso os outros campos estjam de acordo
     fseek(data_file, key_offset, SEEK_SET);
     Data_Register* data = dataBinaryRead(data_file);
 

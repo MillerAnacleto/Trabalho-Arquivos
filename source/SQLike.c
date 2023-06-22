@@ -53,7 +53,7 @@ void SQLCreateIndex(){
         errorFile();
     }
 
-    int parameter = searchParameter();
+    searchParameter();
     scanf("%s", consume); //consome "string" ou "inteiro" (desnecessário)
 
     checker= scanf("%s", index_file_name);
@@ -70,7 +70,6 @@ void SQLSelectWhere(){
     char index_file_name[MAX_FILE_NAME];
     int checker; 
     char consume[MAX_FILE_NAME];
-    int parameter_num = 0;
     int index_parameter = 0;
     int search_num = 0;
     
@@ -132,7 +131,6 @@ void SQLInsertInto(){
         insertIntoBinaryFile(read_file_name, index_file_name, index_parameter);
     }
     
-    int64_t offset = 0;
     binarioNaTela(read_file_name);
     binarioNaTela(index_file_name);
 }
